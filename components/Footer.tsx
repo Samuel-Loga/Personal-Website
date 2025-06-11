@@ -13,7 +13,7 @@ export default function Footer() {
           <div className="flex-1 text-sm">
             <h2 className="text-white text-xl font-bold mb-4">Get In Touch</h2>
             <p className="mb-4">
-              I'm always interested in discussing new opportunities, collaboration, or innovative projects in cybersecurity and technology.
+              I&apos;m always interested in discussing new opportunities, collaboration, or innovative projects in cybersecurity and technology.
             </p>
             <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
               <FaEnvelope className="text-blue-300" />
@@ -29,10 +29,10 @@ export default function Footer() {
           <div className="flex-1 text-sm">
             <h2 className="text-white text-xl font-bold mb-4 hidden md:inline">Quick Links</h2>
             <div className="flex flex-row md:flex-col gap-6 md:gap-2 md:my-4">
-              <Link href="#about" className="hover:text-white transition">About</Link>
-              <Link href="#education" className="hover:text-white transition">Education</Link>
-              <Link href="#experience" className="hover:text-white transition">Experience</Link>
-              <Link href="#projects" className="hover:text-white transition">Projects</Link>
+              <Link href="#about" className="hover:text-teal-500 transition">About</Link>
+              <Link href="#education" className="hover:text-teal-500 transition">Education</Link>
+              <Link href="#experience" className="hover:text-teal-500 transition">Experience</Link>
+              <Link href="#projects" className="hover:text-teal-500 transition">Projects</Link>
             </div>
           </div>
 
@@ -40,13 +40,13 @@ export default function Footer() {
           <div className="flex-1 text-sm">
             <h2 className="text-white text-xl font-bold mb-4 hidden md:inline">Connect With Me</h2>
             <div className="flex justify-center md:justify-start gap-4 mb-6 md:my-5">
-              <a href="https://github.com/Samuel-Loga" target="_blank" rel="noopener noreferrer" className="bg-zinc-800 p-3 border border-zinc-700 rounded-lg hover:text-white transition">
+              <a href="https://github.com/Samuel-Loga" target="_blank" rel="noopener noreferrer" className="bg-zinc-800 p-3 border border-zinc-700 rounded-lg hover:text-teal-500 transition">
                 <FaGithub />
               </a>
-              <a href="https://www.linkedin.com/in/samuel-loga-b963b3258" target="_blank" rel="noopener noreferrer" className="bg-zinc-800 p-3 border border-zinc-700 rounded-lg hover:text-white transition">
+              <a href="https://www.linkedin.com/in/samuel-loga-b963b3258" target="_blank" rel="noopener noreferrer" className="bg-zinc-800 p-3 border border-zinc-700 rounded-lg hover:text-teal-500 transition">
                 <FaLinkedin />
               </a>
-              <a href="mailto:samuelloga9@gmail.com" className="bg-zinc-800 p-3 border border-zinc-700 rounded-lg hover:text-white transition">
+              <a href="mailto:samuelloga9@gmail.com" className="bg-zinc-800 p-3 border border-zinc-700 rounded-lg hover:text-teal-500 transition">
                 <FaEnvelope />
               </a>
             </div>

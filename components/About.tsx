@@ -20,10 +20,10 @@ export default function About() {
         >
           <div>
             <h2 className="pt-2 md:pt-0 text-xl md:text-3xl font-bold mb-4 md:mb-5 text-white">
-              Hello, I'm <span className="text-blue-300">Samuel</span> Loga
+              Hello, I&apos;m <span className="text-blue-300">Samuel</span> Loga
             </h2>
             <p className="text-sm md:text-base text-white mb-6">
-              I'm a passionate <span className="text-blue-300">Cybersecurity Engineer 🔐</span>, <span className="text-blue-300">
+              I&apos;m a passionate <span className="text-blue-300">Cybersecurity Engineer 🔐</span>, <span className="text-blue-300">
               Machine Learning Enthusiast 🤖</span>, and <span className="text-blue-300">Full-Stack Developer 💻</span>. I focus on 
               securing systems, applications, and networks. I also explore how AI can solve real-world problems using data-driven models. 
               And I build fast, scalable, and user-friendly web applications. <span className='hidden md:inline'>I enjoy collaborating with teams to create innovative solutions that make a positive impact.</span>

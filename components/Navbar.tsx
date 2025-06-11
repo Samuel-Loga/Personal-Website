@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
-  FaGithub, FaLinkedin, FaFacebook, FaTwitter, FaInstagram,
-  FaEnvelope, FaYoutube, FaSpotify, FaSignal
+  FaGithub, FaLinkedin, FaTwitter,
+  FaEnvelope, FaYoutube, FaSignal
 } from 'react-icons/fa'
 import { Menu, X } from 'lucide-react'
 
@@ -21,7 +21,7 @@ export default function Nav() {
       const sections = ['about', 'certifications', 'experience', 'skills', 'projects', 'services']
       let current = ''
 
-      for (let id of sections) {
+      for (const id of sections) {
         const el = document.getElementById(id)
         if (el) {
           const top = el.offsetTop - 100 // Adjust based on nav height
@@ -92,14 +92,14 @@ export default function Nav() {
 
           {showDropdown && (
             <div className="absolute top-[120%] right-[-24] w-[280px] bg-[#101828] border border-zinc-700 text-sm mt-5 p-4 rounded-xl shadow-2xl z-40">
-              <p className="mb-2 text-gray-300 font-medium">👨🏽‍💻 Let's Connect</p>
+              <p className="mb-2 text-gray-300 font-medium">👨🏽‍💻 Let&apos;s Connect</p>
               <div className="flex flex-col gap-2 text-gray-400">
-                <a href="https://www.linkedin.com/in/samuel-loga-b963b3258" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-white"><FaLinkedin /> Connect on LinkedIn</a>
-                <a href="https://github.com/Samuel-Loga" className="flex items-center gap-2 hover:text-white"><FaGithub /> Github</a>
-                <a href="https://x.com/Loga265?t=KeoqGcDouwYM9wEgSjNryA&s=35" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-white"><FaTwitter /> Twitter</a>
-                <a href="https://signal.me/#eu/2GWahwi-bhzpSKm3SQ0CBdlViJ3G7NaMjNjePz-VrwwPCQzoOW1Eobhn0ZanaZH-" className="flex items-center gap-2 hover:text-white"><FaSignal /> Signal</a>
-                <a href="mailto:samuelloga9@gmail.com" className="flex items-center gap-2 hover:text-white"><FaEnvelope /> Send me an email</a>
-                <a href="https://www.youtube.com/@Finite265" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-white"><FaYoutube /> YouTube</a>
+                <a href="https://www.linkedin.com/in/samuel-loga-b963b3258" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-teal-500"><FaLinkedin /> Connect on LinkedIn</a>
+                <a href="https://github.com/Samuel-Loga" className="flex items-center gap-2 hover:text-teal-500"><FaGithub /> Github</a>
+                <a href="https://x.com/Loga265?t=KeoqGcDouwYM9wEgSjNryA&s=35" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-teal-500"><FaTwitter /> Twitter</a>
+                <a href="https://signal.me/#eu/2GWahwi-bhzpSKm3SQ0CBdlViJ3G7NaMjNjePz-VrwwPCQzoOW1Eobhn0ZanaZH-" className="flex items-center gap-2 hover:text-teal-500"><FaSignal /> Signal</a>
+                <a href="mailto:samuelloga9@gmail.com" className="flex items-center gap-2 hover:text-teal-500"><FaEnvelope /> Send me an email</a>
+                <a href="https://www.youtube.com/@Finite265" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-teal-500"><FaYoutube /> YouTube</a>
               </div>
             </div>
           )}
