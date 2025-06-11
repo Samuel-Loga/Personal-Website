@@ -49,6 +49,14 @@ const projects: Project[] = [
     description: 'A learning platform developed with the aim to bridge the digital divide in Africa.',
   },
   {
+    title: 'BASA Investments Website',
+    year: '2024',
+    type: 'Web',
+    status: 'Completed',
+    url: 'https://basa-investments.tiiny.io/',
+    description: 'Creating an online presence for a company specialized hardware and software solutions',
+  },
+  {
     title: 'Unified Electronic Identification System',
     year: '2023',
     type: 'Manage IDs',
