@@ -33,13 +33,13 @@ export default function SkillsSection() {
         
         <div className="flex flex-col md:flex-row items-center gap-0 md:gap-12">
           {/* Left image: overlaps on mobile */}
-          <div className="md:w-1/2 flex justify-center relative z-20 -mb-16 md:mb-[-110px] md:ml-[-3%]">
+          <div className="md:w-1/2 flex justify-center relative z-20 -mb-16 md:my-[10px] md:ml-[-3%]">
             <Image
-              src="/images/user4.png"
+              src="/images/IMG4.jpg"
               width={400}
               height={400}
               alt="Technical Illustration"
-              className="object-cover w-2/2 md:w-2/3 max-w-[400px] sm:max-w-[400px] md:max-w-none rounded-t-xl md:rounded-xl"
+              className="object-cover w-2/2 md:w-2/3 max-w-[400px] sm:max-w-[400px] md:max-w-none rounded-t-xl md:rounded-full"
               priority
             />
           </div>

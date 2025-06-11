@@ -82,7 +82,7 @@ export default function Nav() {
           >
             <span className="text-white font-semibold">Samuel Loga</span>
             <Image
-              src="/images/user4.png"
+              src="/images/profile.jpg"
               alt="Samuel Loga"
               width={32}
               height={32}

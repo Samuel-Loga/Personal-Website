@@ -75,7 +75,7 @@ const projects: Project[] = [
 ]
 
 export default function Projects() {
-  const [currentSlide, setCurrentSlide] = useState(0)
+  const [, setCurrentSlide] = useState(0)
   const [loaded, setLoaded] = useState(false)
 
   const [sliderRef, instanceRef] = useKeenSlider({

@@ -32,9 +32,9 @@ export default function About() {
             <div className="flex flex-wrap gap-2 mb-6">
               {[
                 'SIEM', 'Firewall', 'Nmap', 'OpenVAS',
-                'VMs', 'Python', 'Pandas',
-                'Scikit-learn', 'Supabase', 'React', 'Next.js', 
-                'MySQL', 'PHP', 'WordPress', 'CSS', '...'
+                'VMs', 'Python', 'Pandas', 'Scikit-learn',
+                'Flask', 'Supabase', 'React', 'Next.js', 
+                'MySQL', 'PHP', 'WordPress', 'CSS', 'MS365 Admin', '...'
               ].map((tech, i) => (
                 <span key={i} className="px-3 py-1 text-xs md:text-sm bg-teal-600/20 text-blue-300 rounded-full">
                   {tech}
@@ -62,11 +62,19 @@ export default function About() {
           viewport={{ once: true }}
         >
           <Image
-            src="/images/user4.png"
+            src="/images/IMG13.jpg"
             alt="Home"
             width={400}
             height={400}
-            className="object-cover w-2/3 md:w-4/4 max-w-[400px] sm:max-w-[400px] md:max-w-none rounded-t-xl md:rounded-xl"
+            className="block md:hidden object-cover w-3/3 md:w-4/4 max-w-[400px] sm:max-w-[400px] md:max-w-none rounded-t-xl md:rounded-xl"
+          />
+
+          <Image
+            src="/images/IMG12.jpg"
+            alt="Home"
+            width={400}
+            height={400}
+            className="hidden md:block object-cover w-3/3 md:w-4/4 max-w-[400px] sm:max-w-[400px] md:max-w-none rounded-t-xl md:rounded-xl"
           />
         </motion.div>
         {/* className="object-cover w-3/4 md:w-4/4 max-w-[300px] sm:max-w-[300px] md:max-w-none rounded-t-xl md:rounded-xl" */}
