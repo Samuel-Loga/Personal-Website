@@ -20,7 +20,7 @@ const educationHistory = [
   },
 ]
 
-const EducationSection = () => {
+const Education = () => {
   return (
     <section
       id="education"
@@ -49,7 +49,13 @@ const EducationSection = () => {
                   <div className="bg-[#101828] border border-zinc-700 rounded-lg shadow-lg p-6 space-y-2">
                     <h3 className="text-base md:text-lg font-bold transition-colors duration-300 group-hover:text-teal-500">{edu.degree}</h3>
                     <div className="flex items-center gap-2 group text-sm text-zinc-300">
-                      <img src={edu.logo} alt="logo" className="w-6 h-6 object-contain rounded-full" />
+                      <Image 
+                        src={edu.logo} 
+                        alt="logo" 
+                        width={22}
+                        height={22}
+                        className="object-contain rounded-full" 
+                      />
                       <span>{edu.institution}</span>
                     </div>
                     <p className="text-xs text-zinc-400">{edu.period}</p>
@@ -77,4 +83,4 @@ const EducationSection = () => {
   )
 }
 
-export default EducationSection
+export default Education

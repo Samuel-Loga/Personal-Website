@@ -24,7 +24,7 @@ const services = [
   },
 ]
 
-export default function ServicesSection() {
+export default function Services() {
   return (
     <section id="services" className="bg-gray-950 text-white pb-16 pt-4 px-4 sm:px-6 md:px-8">
       <div className="max-w-6xl mx-auto">

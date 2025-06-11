@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useKeenSlider } from 'keen-slider/react'
+import Image from 'next/image'
 import 'keen-slider/keen-slider.min.css'
 import { FaExternalLinkAlt } from 'react-icons/fa'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -132,7 +133,13 @@ const Certifications = () => {
                 </div>
                 {/*<p className="text-sm text-zinc-300">{cert.issuer}</p>*/}
                 <div className="flex items-center gap-2 group text-sm text-zinc-300">
-                      <img src={cert.logo} alt="logo" className="w-6 h-6 object-contain rounded-full" />
+                      <Image 
+                        className="object-contain rounded-full" 
+                        src={cert.logo} 
+                        width={22}
+                        height={22}
+                        alt="logo"
+                      />
                       <span className="text-sm text-zinc-300">{cert.issuer}</span>
                 </div>
                 <p className="text-xs text-zinc-400">{cert.date}</p>                

@@ -47,7 +47,7 @@ const experiences = [
   },
 ]
 
-const ExperienceSection = () => {
+const Experience = () => {
   const [expandedCards, setExpandedCards] = useState<number[]>([])
 
   const toggleCard = (index: number) => {
@@ -148,4 +148,4 @@ const ExperienceSection = () => {
   )
 }
 
-export default ExperienceSection
+export default Experience

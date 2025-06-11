@@ -15,7 +15,7 @@ export default function Hero() {
       </div>
 
       <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-3">
-        Hello, I'm <span className="text-blue-600">Chief</span>
+        Hello, I&apos;m <span className="text-blue-600">Chief</span>
       </h1>
 
       <p className="text-lg sm:text-xl max-w-xl text-gray-600 dark:text-gray-400 mb-6">
@@ -42,7 +42,7 @@ export default function Hero() {
 
 
 {/*<section className="min-h-screen flex flex-col items-center justify-center text-center p-4">
-  <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">Hey, I'm Chief 👋</h1>
+  <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">Hey, I&apos;m Chief 👋</h1>
   <p className="text-lg sm:text-xl max-w-xl text-gray-500 dark:text-gray-400">I build web apps, love cybersecurity, and talk tech on my blog.</p>
   <div className="mt-6 flex gap-4 flex-wrap justify-center">
     <a href="/projects" className="bg-blue-600 text-white px-6 py-3 rounded-md">View Projects</a>

@@ -5,7 +5,7 @@ import { FaChevronRight, FaChevronLeft } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import { TechnicalSkillsCard, SoftSkillsCard } from './SkillsCards'
 
-export default function SkillsSection() {
+export default function Skills() {
   const [showSoftSkills, setShowSoftSkills] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
 
