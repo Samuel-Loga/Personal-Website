@@ -28,7 +28,7 @@ export default function Skills() {
     >
       <div className='max-w-7xl mx-auto'>
         <div>
-          <p className="max-w-2xl mx-auto px-4 sm:px-6 mb-12 text-sm md:text-base text-center italic">As a Cybersecurity Engineer and Full-Stack Developer, I bring together deep technical skills with strong communication and problem-solving abilities. Whether securing systems or building full-featured web applications.</p>
+          <p className="max-w-2xl mx-auto px-4 sm:px-6 mb-12 text-sm md:text-base text-center italic">As a Cybersecurity Engineer and Full-Stack Developer, I bring together deep technical skills with strong communication and problem-solving abilities, whether securing systems or building full-featured web applications.</p>
         </div>
         
         <div className="flex flex-col md:flex-row items-center gap-0 md:gap-12">

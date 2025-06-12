@@ -23,7 +23,7 @@ const experiences = [
       'Investigate incidents to determine cause, impact, and scope.',
       'Report findings and recommendations from incident investigations.',
     ],
-    logo: '/images/maren.png',
+    logo: '/logos/maren.png',
     banner: '/images/cyber2.jpg',
     link: 'https://www.maren.ac.mw',
   },
@@ -41,7 +41,7 @@ const experiences = [
       'Created content to support DSA learning initiatives.',
       'Contributed to business strategies and processes for organizational growth',
     ],
-    logo: '/images/nf.webp',
+    logo: '/logos/nf.png',
     banner: '/images/cyber.png',
     link: 'https://www.nthafoundation.org',
   },
@@ -105,7 +105,7 @@ const Experience = () => {
                         alt={`${exp.company} Logo`}
                         width={24}
                         height={24}
-                        className="object-contain"
+                        className="object-contain rounded-full"
                       />
                       <p className="text-sm text-zinc-400">{exp.company}</p>
                     </div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
-  FaGithub, FaLinkedin, FaTwitter,
+  FaGithub, FaLinkedin, FaTwitter, FaChevronDown,
   FaEnvelope, FaYoutube, FaSignal
 } from 'react-icons/fa'
 import { Menu, X } from 'lucide-react'
@@ -24,7 +24,7 @@ export default function Nav() {
       for (const id of sections) {
         const el = document.getElementById(id)
         if (el) {
-          const top = el.offsetTop - 100 // Adjust based on nav height
+          const top = el.offsetTop - 100
           const bottom = top + el.offsetHeight
           if (window.scrollY >= top && window.scrollY < bottom) {
             current = id
@@ -57,7 +57,7 @@ export default function Nav() {
             <li key={label}>
               <Link
                 href={href}
-                className={`transition-colors duration-300 ${
+                className={`py-4 transition-colors duration-300 ${
                   activeSection === href.replace('#', '') ? 'text-teal-500' : 'hover:text-teal-500'
                 }`}
               >
@@ -75,12 +75,20 @@ export default function Nav() {
         </div>
 
         {/* Profile & Dropdown */}
-        <div className="relative">
+        <div className="relative group">
           <div
-            className="flex items-center space-x-2 cursor-pointer select-none"
+            className="group flex items-center space-x-2 cursor-pointer select-none"
             onClick={toggleDropdown}
           >
-            <span className="text-white font-semibold">Samuel Loga</span>
+            <FaChevronDown
+              className={`text-white text-xs mt-[1px] group-hover:text-teal-500 transition-colors duration-300 ${
+                showDropdown ? 'rotate-180' : ''
+              }`}
+            />
+
+            <span className="font-semibold text-white group-hover:text-teal-500 transition-colors duration-300">
+              Samuel Loga
+            </span>
             <Image
               src="/images/profile.jpg"
               alt="Samuel Loga"

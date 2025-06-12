@@ -37,7 +37,7 @@ const projects: Project[] = [
     year: '2025',
     type: 'Web',
     status: 'In Progress',
-    url: '',
+    url: 'https://samuel-loga-portfolio.vercel.app',
     description: 'This very website — built to showcase projects, skills, and career journey.',
   },
   {
@@ -49,12 +49,12 @@ const projects: Project[] = [
     description: 'A learning platform developed with the aim to bridge the digital divide in Africa.',
   },
   {
-    title: 'BASA Investments Website',
+    title: 'BASA Investments',
     year: '2024',
     type: 'Web',
     status: 'Completed',
     url: 'https://basa-investments.tiiny.io/',
-    description: 'Creating an online presence for a company specialized hardware and software solutions',
+    description: 'An online presence (web) for a company specialized in hardware and software solutions.',
   },
   {
     title: 'Unified Electronic Identification System',
