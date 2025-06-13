@@ -32,7 +32,7 @@ export default function About() {
             <div className="flex flex-wrap gap-2 mb-6">
               {[
                 'SIEM', 'Firewall', 'Nmap', 'OpenVAS',
-                'VMs', 'Python', 'Pandas', 'Scikit-learn',
+                'VMs', 'Kaldi-ASR', 'Python', 'Pandas', 'Scikit-learn',
                 'Flask', 'Supabase', 'React', 'Next.js', 
                 'MySQL', 'PHP', 'WordPress', 'CSS', 'MS365 Admin', '...'
               ].map((tech, i) => (
