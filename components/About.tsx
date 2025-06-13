@@ -44,7 +44,7 @@ export default function About() {
           </div>
           <div className="mt-2 md:mt-4 mb-2 md:mb-0">
             <Link
-              href="/resume.pdf"
+              href="https://drive.google.com/uc?export=download&id=1CDYy8kJ1nJShDStDnPRuK-X2y_Amy9WM"
               className="px-6 py-3 bg-blue-600/20 text-white border border-zinc-700 rounded-md hover:bg-blue-900/20 transition inline-flex"
             >
               Download Resume
