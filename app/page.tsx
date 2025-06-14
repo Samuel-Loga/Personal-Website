@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <>
       <About />
-      <Certifications /> 
+      <Certifications />
       <Experience />
       <Skills />
       <Projects />  
