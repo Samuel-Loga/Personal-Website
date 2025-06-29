@@ -12,6 +12,7 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.0",
     "@vercel/speed-insights": "^1.2.0",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.7.4",
     "keen-slider": "^6.8.6",
     "lucide-react": "^0.503.0",

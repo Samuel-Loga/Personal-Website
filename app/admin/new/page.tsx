@@ -15,6 +15,8 @@ export default function NewPostPage() {
   const [status, setStatus] = useState('draft')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [excerpt, setExcerpt] = useState('')
+  const [category, setCategory] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,6 +30,8 @@ export default function NewPostPage() {
         cover_image: coverImage,
         created_by: createdBy,
         status,
+        excerpt,
+        category,
       },
     ])
 
@@ -75,6 +79,26 @@ export default function NewPostPage() {
             className="w-full px-4 py-2 border rounded-md"
             value={coverImage}
             onChange={(e) => setCoverImage(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium mb-1">Category</label>
+          <textarea
+            className="w-full px-4 py-2 border rounded-md min-h-[180px]"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium mb-1">Excerpt</label>
+          <textarea
+            className="w-full px-4 py-2 border rounded-md min-h-[180px]"
+            value={excerpt}
+            onChange={(e) => setExcerpt(e.target.value)}
+            required
           />
         </div>
 
