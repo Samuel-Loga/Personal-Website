@@ -190,3 +190,11 @@ export default async function PostPage({ params }: Props) {
     </>
   )
 }
+
+export async function generateStaticParams() {
+  const { data: posts } = await supabase.from('posts').select('slug')
+
+  return (posts ?? []).map((post) => ({
+    slug: post.slug,
+  }))
+}
