@@ -7,8 +7,18 @@ import { format } from 'date-fns'
 import { FaTh, FaList } from 'react-icons/fa'
 import Image from 'next/image'
 
+type Post = {
+  id: string
+  title: string
+  slug: string
+  excerpt?: string
+  cover_image?: string
+  created_at: string
+  category?: string
+}
+
 export default function BlogPage() {
-  const [posts, setPosts] = useState<any[]>([])
+  const [posts, setPosts] = useState<Post[]>([])
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [loading, setLoading] = useState(true)
@@ -25,7 +35,7 @@ export default function BlogPage() {
       .order('created_at', { ascending: false })
 
     if (error) console.error('Error fetching posts:', error)
-    else setPosts(data)
+    else setPosts(data as Post[])
 
     setLoading(false)
   }
