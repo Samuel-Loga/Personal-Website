@@ -21,8 +21,17 @@ import Image from 'next/image'
   category: string
 }*/}
 
-export default async function PostPage(props: { params: { slug: string } }) {
-  const { slug } = props.params
+type Props = {
+  params: {
+    slug: string
+  }
+}
+
+export default async function PostPage({ params }: Props) {
+  const { slug } = await params
+
+//export default async function PostPage(props: { params: { slug: string } }) {
+  //const { slug } = props.params
 
   // Fetch the current post
   const { data: post, error } = await supabase
