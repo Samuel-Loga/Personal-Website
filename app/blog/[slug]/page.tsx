@@ -5,10 +5,10 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
 import ScrollToTopButton from '@/components/ScrollToTopButton'
-import CommentsSection from '@/components/CommentSection'
 import CommentSectionWrapper from '@/components/CommentSectionWrapper'
+import Image from 'next/image'
 
-type Post = {
+{/*type Post = {
   id: string
   title: string
   content: string
@@ -19,10 +19,10 @@ type Post = {
   cover_image: string
   excerpt: string
   category: string
-}
+}*/}
 
-export default async function PostPage({ params }: { params: { slug: string } }) {
-  const {slug} = params
+export default async function PostPage(props: { params: { slug: string } }) {
+  const { slug } = props.params
 
   // Fetch the current post
   const { data: post, error } = await supabase
@@ -65,11 +65,16 @@ export default async function PostPage({ params }: { params: { slug: string } })
             </p>
 
             {post.cover_image && (
-              <img
-                src={post.cover_image}
-                alt={post.title}
-                className="my-6 w-full rounded-md"
-              />
+              <div className="relative w-full aspect-[16/9] my-6 rounded-md overflow-hidden">
+                <Image
+                  src={post.cover_image}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                  priority
+                />
+              </div>
             )}
 
             <article className="prose prose-zinc max-w-none">
@@ -119,10 +124,12 @@ export default async function PostPage({ params }: { params: { slug: string } })
                     className="flex items-start gap-4 group"
                   >
                     {p.cover_image && (
-                      <img
+                      <Image
                         src={p.cover_image}
                         alt={p.title}
-                        className="w-16 h-16 object-cover rounded-md"
+                        width={64}
+                        height={64}
+                        className="object-cover rounded-md"
                       />
                     )}
                     <div>
@@ -141,7 +148,6 @@ export default async function PostPage({ params }: { params: { slug: string } })
         </div>
       </section>
 
-      
       <Footer />
       <ScrollToTopButton />
 

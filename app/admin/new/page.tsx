@@ -11,7 +11,7 @@ export default function NewPostPage() {
   const [slug, setSlug] = useState('')
   const [content, setContent] = useState('')
   const [coverImage, setCoverImage] = useState('')
-  const [createdBy, setCreatedBy] = useState('Samuel Loga')
+  const [, setCreatedBy] = useState('Samuel Loga')
   const [status, setStatus] = useState('draft')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -28,7 +28,7 @@ export default function NewPostPage() {
         slug,
         content,
         cover_image: coverImage,
-        created_by: createdBy,
+        created_by: 'Samuel Loga',
         status,
         excerpt,
         category,

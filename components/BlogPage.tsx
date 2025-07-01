@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { format } from 'date-fns'
 import { FaTh, FaList } from 'react-icons/fa'
+import Image from 'next/image'
 
 export default function BlogPage() {
   const [posts, setPosts] = useState<any[]>([])
@@ -75,11 +76,15 @@ export default function BlogPage() {
               className="border border-zinc-200 rounded-lg overflow-hidden shadow hover:shadow-lg transition-all bg-white"
             >
               {post.cover_image && (
-                <img
-                  src={post.cover_image}
-                  alt={post.title}
-                  className="w-full h-48 object-cover"
-                />
+                <div className="relative w-full h-48">
+                  <Image
+                    src={post.cover_image}
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                  />
+                </div>
               )}
               <div className="p-4">
                 <span className="text-xs text-blue-500 uppercase tracking-wide">{post.category || 'General'}</span>
