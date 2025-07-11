@@ -26,7 +26,7 @@ import Image from 'next/image'
 //export default async function PostPage({ params }: { params: { slug: string } }) {
   //const { slug } = await params;
 
-export default async function PostPage(props: { params: { slug: string } }) {
+export default async function PostPage(props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params
 
   // Fetch the current post
