@@ -1,6 +1,6 @@
 // app/blog/[slug]/page.tsx
 import Script from 'next/script'
-import { supabase } from '@/lib/supabaseServer'
+import { supabaseAdmin } from '@/lib/supabaseServer'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
@@ -30,7 +30,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
   const { slug } = await props.params
 
   // Fetch the current post
-  const { data: post, error } = await supabase
+  const { data: post, error } = await supabaseAdmin
     .from('posts')
     .select('*')
     .eq('slug', slug)
@@ -40,7 +40,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
   if (error || !post) notFound()
 
   // Fetch categories (distinct and sorted)
-  const { data: categoriesData } = await supabase
+  const { data: categoriesData } = await supabaseAdmin
     .from('posts')
     .select('category')
     .eq('status', 'published')
@@ -50,7 +50,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
   ).slice(0, 5)
 
   // Fetch 3 most recent posts (excluding current)
-  const { data: recentPosts } = await supabase
+  const { data: recentPosts } = await supabaseAdmin
     .from('posts')
     .select('id, title, slug, excerpt, cover_image, created_at')
     .eq('status', 'published')
@@ -188,7 +188,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
 }
 
 export async function generateStaticParams() {
-  const { data: posts } = await supabase.from('posts').select('slug')
+  const { data: posts } = await supabaseAdmin.from('posts').select('slug')
 
   return (posts ?? []).map((post) => ({
     slug: post.slug,
