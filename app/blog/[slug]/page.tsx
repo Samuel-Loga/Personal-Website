@@ -1,6 +1,6 @@
 // app/blog/[slug]/page.tsx
 import Script from 'next/script'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase } from '@/lib/supabaseServer'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
