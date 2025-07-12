@@ -3,3 +3,7 @@
 body {
   @apply subpixel-antialiased;
 }
+
+html {
+  scroll-behavior: smooth;
+}

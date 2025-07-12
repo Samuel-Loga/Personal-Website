@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { ThumbsUp, ThumbsDown } from 'react-feather'
 
@@ -24,23 +24,7 @@ export default function CommentSection({ postId }: { postId: string }) {
     Record<string, { likes: number; dislikes: number }>
   >({})
 
-  // Combined useEffect for loading saved data and fetching from DB
-  useEffect(() => {
-    const savedUsername = localStorage.getItem('comment_username')
-    const savedEmail = localStorage.getItem('comment_email')
-
-    if (savedUsername) setUsername(savedUsername)
-    if (savedEmail) setEmail(savedEmail)
-
-    const init = async () => {
-      await fetchComments()
-      await fetchReactions()
-    }
-
-    init()
-  }, [])
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     const { data, error } = await supabase
       .from('comments')
       .select('*')
@@ -52,12 +36,10 @@ export default function CommentSection({ postId }: { postId: string }) {
     } else {
       setComments(data as Comment[])
     }
-  }
+  }, [postId])
 
-  const fetchReactions = async () => {
-    const { data, error } = await supabase
-      .from('reactions')
-      .select('comment_id, type')
+  const fetchReactions = useCallback(async () => {
+    const { data, error } = await supabase.from('reactions').select('comment_id, type')
 
     if (!error && data) {
       const counts: Record<string, { likes: number; dislikes: number }> = {}
@@ -74,7 +56,7 @@ export default function CommentSection({ postId }: { postId: string }) {
     } else {
       console.error('Fetch reactions error:', error)
     }
-  }
+  }, [])
 
   const handleReaction = async (commentId: string, type: 'like' | 'dislike') => {
     const reacted = JSON.parse(localStorage.getItem('reacted_comments') || '{}')
@@ -100,7 +82,6 @@ export default function CommentSection({ postId }: { postId: string }) {
             [previousKey]: Math.max(0, (prev[commentId]?.[previousKey] || 1) - 1),
           },
         }))
-        
       } else {
         console.error('Failed to undo reaction:', error.message)
       }
@@ -115,10 +96,8 @@ export default function CommentSection({ postId }: { postId: string }) {
         .delete()
         .match({ comment_id: commentId, type: previousReaction })
 
-      // Convert 'like' | 'dislike' to 'likes' | 'dislikes'
       const previousKey = (previousReaction + 's') as 'likes' | 'dislikes'
 
-      // Decrement opposite reaction count locally
       setReactionCounts((prev) => ({
         ...prev,
         [commentId]: {
@@ -137,10 +116,8 @@ export default function CommentSection({ postId }: { postId: string }) {
       reacted[commentId] = type
       localStorage.setItem('reacted_comments', JSON.stringify(reacted))
 
-      // Fix here: convert type ('like' | 'dislike') to state key ('likes' | 'dislikes')
       const key = (type + 's') as 'likes' | 'dislikes'
 
-      // Increment new reaction count locally
       setReactionCounts((prev) => ({
         ...prev,
         [commentId]: {
@@ -148,10 +125,25 @@ export default function CommentSection({ postId }: { postId: string }) {
           [key]: (prev[commentId]?.[key] || 0) + 1,
         },
       }))
-    }  else {
+    } else {
       console.error('Failed to insert reaction:', error.message)
     }
   }
+
+  useEffect(() => {
+    const savedUsername = localStorage.getItem('comment_username')
+    const savedEmail = localStorage.getItem('comment_email')
+
+    if (savedUsername) setUsername(savedUsername)
+    if (savedEmail) setEmail(savedEmail)
+
+    const init = async () => {
+      await fetchComments()
+      await fetchReactions()
+    }
+
+    init()
+  }, [fetchComments, fetchReactions])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -169,8 +161,8 @@ export default function CommentSection({ postId }: { postId: string }) {
         post_id: postId,
         username,
         email,
-        comment
-      }
+        comment,
+      },
     ])
 
     if (insertError) {
@@ -244,7 +236,9 @@ export default function CommentSection({ postId }: { postId: string }) {
               <button
                 onClick={() => handleReaction(c.id, 'like')}
                 className={`flex items-center gap-1 hover:text-blue-600 ${
-                  reactionCounts[c.id]?.likes && JSON.parse(localStorage.getItem('reacted_comments') || '{}')[c.id] === 'like'
+                  reactionCounts[c.id]?.likes &&
+                  JSON.parse(localStorage.getItem('reacted_comments') || '{}')[c.id] ===
+                    'like'
                     ? 'text-blue-600 font-semibold'
                     : ''
                 }`}
@@ -255,7 +249,9 @@ export default function CommentSection({ postId }: { postId: string }) {
               <button
                 onClick={() => handleReaction(c.id, 'dislike')}
                 className={`flex items-center gap-1 hover:text-red-500 ${
-                  reactionCounts[c.id]?.dislikes && JSON.parse(localStorage.getItem('reacted_comments') || '{}')[c.id] === 'dislike'
+                  reactionCounts[c.id]?.dislikes &&
+                  JSON.parse(localStorage.getItem('reacted_comments') || '{}')[c.id] ===
+                    'dislike'
                     ? 'text-red-500 font-semibold'
                     : ''
                 }`}
@@ -264,7 +260,6 @@ export default function CommentSection({ postId }: { postId: string }) {
                 {reactionCounts[c.id]?.dislikes || 0}
               </button>
             </div>
-
           </div>
         ))}
       </div>

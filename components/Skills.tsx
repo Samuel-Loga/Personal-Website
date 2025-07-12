@@ -35,7 +35,7 @@ export default function Skills() {
           {/* Left image: overlaps on mobile */}
           <div className="md:w-1/2 flex justify-center relative z-20 -mb-16 md:my-[10px] md:ml-[-3%]">
             <Image
-              src="/images/IMG4.jpg"
+              src="/images/me.jpg"
               width={400}
               height={400}
               alt="Technical Illustration"

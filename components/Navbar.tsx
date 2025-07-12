@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   FaGithub, FaLinkedin, FaTwitter, FaChevronDown,
   FaEnvelope, FaYoutube, FaSignal
@@ -13,6 +14,8 @@ export default function Nav() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('')
+  const router = useRouter()
+  const pathname = usePathname()
 
   const toggleDropdown = () => setShowDropdown(prev => !prev)
 
@@ -35,9 +38,21 @@ export default function Nav() {
       setActiveSection(current)
     }
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    if (pathname === '/') {
+      window.addEventListener('scroll', handleScroll)
+      return () => window.removeEventListener('scroll', handleScroll)
+    }
+  }, [pathname])
+
+  const handleNavClick = (e: React.MouseEvent, sectionId: string) => {
+    if (pathname !== '/') {
+      e.preventDefault()
+      router.push(`/#${sectionId}`)
+    } else {
+      const el = document.getElementById(sectionId)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
 
   return (
     <nav className="w-full fixed top-6 z-50 flex justify-center px-4 sm:px-6">
@@ -46,25 +61,30 @@ export default function Nav() {
         {/* Desktop Nav Items */}
         <ul className="hidden md:flex space-x-6 font-medium text-white text-sm">
           {[
-            { href: '#about', label: 'Home' },
-            { href: '#certifications', label: 'Certifications' },
-            { href: '#experience', label: 'Work' },
-            { href: '#skills', label: 'Skills' },
-            { href: '#projects', label: 'Projects' },
-            { href: '#services', label: 'Services' },
-            { href: '/blog', label: 'Blog' },
-          ].map(({ href, label }) => (
+            { id: 'about', label: 'Home' },
+            { id: 'certifications', label: 'Certifications' },
+            { id: 'experience', label: 'Work' },
+            { id: 'skills', label: 'Skills' },
+            { id: 'projects', label: 'Projects' },
+            { id: 'services', label: 'Services' },
+          ].map(({ id, label }) => (
             <li key={label}>
               <Link
-                href={href}
+                href={`/#${id}`}
+                onClick={(e) => handleNavClick(e, id)}
                 className={`py-4 transition-colors duration-300 ${
-                  activeSection === href.replace('#', '') ? 'text-teal-500' : 'hover:text-teal-500'
+                  activeSection === id ? 'text-teal-500' : 'hover:text-teal-500'
                 }`}
               >
                 {label}
               </Link>
             </li>
           ))}
+          <li>
+            <Link href="/blog" className="py-4 hover:text-teal-500 transition-colors duration-300">
+              Blog
+            </Link>
+          </li>
         </ul>
 
         {/* Mobile Menu Toggle */}
@@ -85,7 +105,6 @@ export default function Nav() {
                 showDropdown ? 'rotate-180' : ''
               }`}
             />
-
             <span className="font-semibold text-white group-hover:text-teal-500 transition-colors duration-300">
               Samuel Loga
             </span>
@@ -120,26 +139,37 @@ export default function Nav() {
           <div className="bg-[#101828] border border-zinc-700 text-white p-4 rounded-xl shadow-xl z-40">
             <ul className="flex flex-col gap-4 font-medium text-sm">
               {[
-                { href: '#about', label: 'About' },
-                { href: '#certifications', label: 'Certifications' },
-                { href: '#experience', label: 'Experience' },
-                { href: '#skills', label: 'Skills' },
-                { href: '#projects', label: 'Projects' },
-                { href: '#services', label: 'Services' },
-                { href: '/blog', label: 'Blog' }
-              ].map(({ href, label }) => (
+                { id: 'about', label: 'Home' },
+                { id: 'certifications', label: 'Certifications' },
+                { id: 'experience', label: 'Work' },
+                { id: 'skills', label: 'Skills' },
+                { id: 'projects', label: 'Projects' },
+                { id: 'services', label: 'Services' },
+              ].map(({ id, label }) => (
                 <li key={label}>
                   <Link
-                    href={href}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    href={`/#${id}`}
+                    onClick={(e) => {
+                      setIsMobileMenuOpen(false)
+                      handleNavClick(e, id)
+                    }}
                     className={`transition-colors duration-300 ${
-                      activeSection === href.replace('#', '') ? 'text-teal-500' : 'hover:text-teal-500'
+                      activeSection === id ? 'text-teal-500' : 'hover:text-teal-500'
                     }`}
                   >
                     {label}
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link
+                  href="/blog"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="transition-colors duration-300 hover:text-teal-500"
+                >
+                  Blog
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
