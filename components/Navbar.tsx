@@ -81,7 +81,12 @@ export default function Nav() {
             </li>
           ))}
           <li>
-            <Link href="/blog" className="py-4 hover:text-teal-500 transition-colors duration-300">
+            <Link
+              href="/blog"
+              className={`py-4 transition-colors duration-300 ${
+                pathname.startsWith('/blog') ? 'text-teal-500' : 'hover:text-teal-500'
+              }`}
+            >
               Blog
             </Link>
           </li>
@@ -165,7 +170,9 @@ export default function Nav() {
                 <Link
                   href="/blog"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="transition-colors duration-300 hover:text-teal-500"
+                  className={`transition-colors duration-300 ${
+                    pathname.startsWith('/blog') ? 'text-teal-500' : 'hover:text-teal-500'
+                  }`}
                 >
                   Blog
                 </Link>

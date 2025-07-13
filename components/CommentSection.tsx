@@ -189,34 +189,34 @@ export default function CommentSection({ postId }: { postId: string }) {
 
   return (
     <div className="mt-12">
-      <h3 className="text-xl font-semibold mb-4">Leave a Comment</h3>
+      <h3 className="text-xl font-semibold mb-4 text-zinc-300">Leave a Comment</h3>
 
       <form onSubmit={handleSubmit} className="space-y-4 mb-6">
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <input
           type="text"
           placeholder="Your name"
-          className="w-full px-4 py-2 border rounded-md"
+          className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
         <input
           type="email"
           placeholder="Your email (won’t be shown)"
-          className="w-full px-4 py-2 border rounded-md"
+          className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <textarea
           placeholder="Your comment"
-          className="w-full px-4 py-2 border rounded-md"
+          className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
           rows={4}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+          className="px-6 py-2 bg-blue-600/20 text-white border border-zinc-700 rounded-md hover:bg-blue-900/20 transition inline-flex"
           disabled={loading}
         >
           {loading ? 'Posting...' : 'Submit Comment'}
@@ -225,17 +225,17 @@ export default function CommentSection({ postId }: { postId: string }) {
 
       <div className="space-y-4">
         {comments.map((c) => (
-          <div key={c.id} className="border-b pb-2">
-            <p className="text-sm text-gray-600 font-medium">
+          <div key={c.id} className="border-b border-zinc-400 pb-4">
+            <p className="text-sm text-zinc-300 font-medium">
               {c.username} • {new Date(c.created_at).toLocaleDateString()}
             </p>
-            <p className="text-gray-800 text-sm mt-1">{c.comment}</p>
+            <p className="text-zinc-300 text-sm mt-1">{c.comment}</p>
 
             {/* Reactions */}
-            <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+            <div className="flex items-center gap-4 mt-2 text-sm text-zinc-300">
               <button
                 onClick={() => handleReaction(c.id, 'like')}
-                className={`flex items-center gap-1 hover:text-blue-600 ${
+                className={`flex items-center gap-1 hover:text-teal-500 ${
                   reactionCounts[c.id]?.likes &&
                   JSON.parse(localStorage.getItem('reacted_comments') || '{}')[c.id] ===
                     'like'
