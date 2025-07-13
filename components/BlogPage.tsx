@@ -45,7 +45,9 @@ export default function BlogPage() {
   )
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-28 py-12">
+    <section className="px-4 sm:px-6 w-full py-12 pb-10 bg-zinc-800 relative" >
+      <div className="max-w-6xl mx-auto mt-18 relative">
+    
       {/* Search & View Toggle */}
       <div className="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap mb-8">
         <input
@@ -53,11 +55,11 @@ export default function BlogPage() {
           placeholder="Search posts..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] px-4 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-[220px] sm:w-[300px] md:w-[350px] text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
         />
         <button
           onClick={() => setView('grid')}
-          className={`p-2 rounded-md ${view === 'grid' ? 'text-blue-600 bg-zinc-100' : 'text-zinc-500'}`}
+          className={`rounded-md ${view === 'grid' ? 'text-teal-600' : 'text-zinc-500'}`}
         >
           <FaTh size={26} />
         </button>
@@ -80,28 +82,28 @@ export default function BlogPage() {
             <Link
               key={post.id}
               href={`/blog/${post.slug}`}
-              className="border border-zinc-200 rounded-lg overflow-hidden shadow hover:shadow-lg transition-all bg-white"
+              className="rounded-lg overflow-hidden shadow hover:shadow-lg transition-all bg-white"
             >
               {post.cover_image && (
-                <div className="relative w-full h-48">
+                <div className="relative w-full h-48 bg-[#101828]">
                   <Image
                     src={post.cover_image}
                     alt={post.title}
                     fill
-                    className="object-cover"
+                    className="object-cover rounded-b-lg"
                     sizes="100vw"
                   />
                 </div>
               )}
-              <div className="p-4">
-                <span className="text-xs text-blue-500 uppercase tracking-wide">
+              <div className="p-4 bg-[#101828]">
+                <span className="text-xs md:text-sm text-teal-600">
                   {post.category || 'General'}
                 </span>
-                <h2 className="mt-1 font-semibold text-lg text-zinc-800">{post.title}</h2>
-                <p className="text-sm text-zinc-500 mb-2">
+                <h2 className="mt-1 font-semibold text-base text-zinc-300">{post.title}</h2>
+                <p className="mt-1 text-xs text-zinc-400 mb-2">
                   {format(new Date(post.created_at), 'MMM d, yyyy')}
                 </p>
-                <p className="text-sm text-zinc-700 line-clamp-3">
+                <p className="text-sm text-zinc-400 line-clamp-3">
                   {post.excerpt || 'No summary available.'}
                 </p>
               </div>
@@ -110,5 +112,6 @@ export default function BlogPage() {
         </div>
       )}
     </div>
+  </section>
   )
 }

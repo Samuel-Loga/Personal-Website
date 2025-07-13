@@ -42,17 +42,17 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
 
   return (
     <>
-      <section id="slugBlogPage" className="px-4 sm:px-6 w-full">
+      <section id="slugBlogPage" className="px-4 sm:px-6 w-full bg-zinc-800">
         <div className="max-w-6xl mx-auto py-32 grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-10">
           {/* Left: Main Content */}
           <div>
-            <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-3xl font-bold mb-2 text-zinc-300">{post.title}</h1>
+            <p className="text-sm text-gray-500 text-zinc-300">
               By {post.created_by} • {new Date(post.created_at).toLocaleDateString()}
             </p>
 
             {post.cover_image && (
-              <div className="relative w-full aspect-[16/9] my-6 rounded-md overflow-hidden">
+              <div className="relative w-full aspect-[16/9] my-6 rounded-xl overflow-hidden">
                 <Image
                   src={post.cover_image}
                   alt={post.title}
@@ -64,11 +64,11 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
               </div>
             )}
 
-            <article className="prose prose-zinc max-w-none">
+            <article className="prose prose-zinc max-w-none text-zinc-300">
               <div dangerouslySetInnerHTML={{ __html: post.content }} />
             </article>
 
-            <Link href="/blog" className="block mt-10 text-blue-600 hover:underline">
+            <Link href="/blog" className="block mt-10 text-teal-500 hover:underline">
               ← Back to Blog
             </Link>
 
@@ -76,16 +76,16 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
           </div>
 
           {/* Right: Sidebar */}
-          <aside className="space-y-10 md:mt-20">
+          <aside className="space-y-10 md:mt-20 bg-[#101828] rounded-xl px-4 py-3">
             {/* Categories */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Categories</h3>
+              <h3 className="text-lg font-semibold mb-4 text-zinc-300">Categories</h3>
               <ul className="space-y-2">
                 {uniqueCategories.map((cat) => (
                   <li key={cat}>
                     <Link
                       href={`/blog?category=${encodeURIComponent(cat)}`}
-                      className="text-sm text-gray-700 hover:text-blue-600"
+                      className="text-sm text-zinc-300 hover:text-teal-500"
                     >
                       #{cat}
                     </Link>
@@ -94,7 +94,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
               </ul>
               <Link
                 href="/blog/categories"
-                className="mt-2 inline-block text-xs text-blue-600 hover:underline"
+                className="mt-3 inline-block text-xs text-teal-500 hover:underline"
               >
                 View more →
               </Link>
@@ -102,7 +102,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
 
             {/* Recent Posts */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Recent Posts</h3>
+              <h3 className="text-lg font-semibold mb-4 text-zinc-300">Recent Posts</h3>
               <div className="space-y-4">
                 {recentPosts?.map((p) => (
                   <Link
@@ -120,10 +120,10 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
                       />
                     )}
                     <div>
-                      <h4 className="text-sm font-medium text-gray-800 group-hover:text-blue-600 line-clamp-1">
+                      <h4 className="text-sm font-medium text-teal-500 group-hover:underline line-clamp-1">
                         {p.title}
                       </h4>
-                      <p className="text-xs text-gray-500 line-clamp-2">
+                      <p className="text-xs text-zinc-300 line-clamp-2">
                         {p.excerpt}
                       </p>
                     </div>
