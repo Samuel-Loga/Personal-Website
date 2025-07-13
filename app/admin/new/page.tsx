@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation' // Removed as it's not used
 
 // Lexical Core
 import {
@@ -13,7 +13,7 @@ import {
   $createParagraphNode,
   SELECTION_CHANGE_COMMAND,
   COMMAND_PRIORITY_CRITICAL,
-  NodeKey,
+  EditorState,
 } from 'lexical';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
@@ -115,6 +115,24 @@ function ToolbarPlugin() {
     }
   };
 
+  const formatQuote = () => {
+    if (blockType !== 'quote') {
+        editor.update(() => {
+            const selection = $getSelection();
+            if ($isRangeSelection(selection)) {
+                $wrapNodes(selection, () => $createQuoteNode());
+            }
+        });
+    } else {
+        editor.update(() => {
+            const selection = $getSelection();
+            if ($isRangeSelection(selection)) {
+                $wrapNodes(selection, () => $createParagraphNode());
+            }
+        });
+    }
+  };
+
   const formatBulletList = () => {
     if (blockType !== 'ul') {
       editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
@@ -168,6 +186,10 @@ function ToolbarPlugin() {
 
   return (
     <div className="flex flex-wrap items-center gap-2 p-2 border-b border-gray-300 dark:border-gray-600 rounded-t-md bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+        <button onClick={() => formatHeading('h1')} className={`p-2 rounded ${blockType === 'h1' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Heading 1">H1</button>
+        <button onClick={() => formatHeading('h2')} className={`p-2 rounded ${blockType === 'h2' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Heading 2">H2</button>
+        <button onClick={() => formatHeading('h3')} className={`p-2 rounded ${blockType === 'h3' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Heading 3">H3</button>
+        <div className="h-6 w-px bg-gray-300 dark:bg-gray-500 mx-1"></div>
         <button onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')} className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Bold">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path></svg>
         </button>
@@ -178,6 +200,9 @@ function ToolbarPlugin() {
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path><line x1="4" y1="21" x2="20" y2="21"></line></svg>
         </button>
         <div className="h-6 w-px bg-gray-300 dark:bg-gray-500 mx-1"></div>
+        <button onClick={formatQuote} className={`p-2 rounded ${blockType === 'quote' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Quote">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v6c0 7 4 8 8 8Z"/><path d="M14 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v6c0 7 4 8 8 8Z"/></svg>
+        </button>
         <button onClick={formatBulletList} className={`p-2 rounded ${blockType === 'ul' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Bulleted List">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
         </button>
@@ -240,7 +265,7 @@ function LexicalEditor({ onChange }: LexicalEditorProps) {
     ],
   };
 
-  const handleOnChange = (_editorState: any, editor: LexicalEditorType) => {
+  const handleOnChange = (_editorState: EditorState, editor: LexicalEditorType) => {
     editor.update(() => {
       const htmlString = $generateHtmlFromNodes(editor, null);
       onChange(htmlString);
@@ -271,8 +296,6 @@ function LexicalEditor({ onChange }: LexicalEditorProps) {
 
 // The main page component for creating a new post
 export default function NewPostPage() {
-  const router = useRouter()
-
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [content, setContent] = useState('')
@@ -326,7 +349,6 @@ export default function NewPostPage() {
   return (
     <section className="px-4 sm:px-6 w-full pt-30 pb-10 bg-[#181818] relative" >
       <div className="max-w-6xl mx-auto relative bg-white dark:bg-gray-900 shadow-lg rounded-lg p-8">
-
         <h1 className="text-3xl font-bold mb-8 text-zinc-900 dark:text-white">📝 Create New Blog Post</h1>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-x-8">
@@ -390,7 +412,7 @@ export default function NewPostPage() {
                 required
               />
             </div>
-            
+
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
               <select

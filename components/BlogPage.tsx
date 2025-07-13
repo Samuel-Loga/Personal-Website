@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { format } from 'date-fns'
-import { FaTh, FaList } from 'react-icons/fa'
+import { FaTh } from 'react-icons/fa'
 import Image from 'next/image'
 
 type Post = {
