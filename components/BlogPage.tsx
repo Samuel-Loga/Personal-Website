@@ -45,25 +45,22 @@ export default function BlogPage() {
   )
 
   return (
-    <div className="max-w-6xl mx-auto mt-28 py-12">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-28 py-12">
       {/* Search & View Toggle */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap mb-8">
         <input
           type="text"
           placeholder="Search posts..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full sm:w-1/3 px-4 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 min-w-[200px] px-4 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-
-        <div className="flex items-center gap-2">
-          <button onClick={() => setView('grid')} className={`${view === 'grid' ? 'text-blue-600' : 'text-zinc-500'}`}>
-            <FaTh size={18} />
-          </button>
-          <button onClick={() => setView('list')} className={`${view === 'list' ? 'text-blue-600' : 'text-zinc-500'}`}>
-            <FaList size={18} />
-          </button>
-        </div>
+        <button
+          onClick={() => setView('grid')}
+          className={`p-2 rounded-md ${view === 'grid' ? 'text-blue-600 bg-zinc-100' : 'text-zinc-500'}`}
+        >
+          <FaTh size={26} />
+        </button>
       </div>
 
       {/* Post Container */}
@@ -79,7 +76,7 @@ export default function BlogPage() {
               : 'flex flex-col gap-6'
           }
         >
-          {filteredPosts.map(post => (
+          {filteredPosts.map((post) => (
             <Link
               key={post.id}
               href={`/blog/${post.slug}`}
@@ -97,10 +94,16 @@ export default function BlogPage() {
                 </div>
               )}
               <div className="p-4">
-                <span className="text-xs text-blue-500 uppercase tracking-wide">{post.category || 'General'}</span>
+                <span className="text-xs text-blue-500 uppercase tracking-wide">
+                  {post.category || 'General'}
+                </span>
                 <h2 className="mt-1 font-semibold text-lg text-zinc-800">{post.title}</h2>
-                <p className="text-sm text-zinc-500 mb-2">{format(new Date(post.created_at), 'MMM d, yyyy')}</p>
-                <p className="text-sm text-zinc-700 line-clamp-3">{post.excerpt || 'No summary available.'}</p>
+                <p className="text-sm text-zinc-500 mb-2">
+                  {format(new Date(post.created_at), 'MMM d, yyyy')}
+                </p>
+                <p className="text-sm text-zinc-700 line-clamp-3">
+                  {post.excerpt || 'No summary available.'}
+                </p>
               </div>
             </Link>
           ))}
