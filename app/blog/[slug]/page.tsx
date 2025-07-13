@@ -38,12 +38,12 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
     .eq('status', 'published')
     .neq('slug', slug)
     .order('created_at', { ascending: false })
-    .limit(3)
+    .limit(8)
 
   return (
     <>
       <section id="slugBlogPage" className="px-4 sm:px-6 w-full bg-zinc-800">
-        <div className="max-w-6xl mx-auto py-32 grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-10">
+        <div className="max-w-6xl mx-auto pt-32 pb-24 grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-10">
           {/* Left: Main Content */}
           <div>
             <h1 className="text-3xl font-bold mb-2 text-zinc-300">{post.title}</h1>
@@ -111,13 +111,15 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
                     className="flex items-start gap-4 group"
                   >
                     {p.cover_image && (
-                      <Image
-                        src={p.cover_image}
-                        alt={p.title}
-                        width={64}
-                        height={64}
-                        className="object-cover rounded-md"
-                      />
+                      <div className="w-13 h-13 relative flex-shrink-0">
+                        <Image
+                          src={p.cover_image}
+                          alt={p.title}
+                          fill
+                          className="object-cover rounded-md"
+                          sizes="64px"
+                        />
+                      </div>
                     )}
                     <div>
                       <h4 className="text-sm font-medium text-teal-500 group-hover:underline line-clamp-1">
@@ -131,6 +133,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
                 ))}
               </div>
             </div>
+
           </aside>
         </div>
       </section>
