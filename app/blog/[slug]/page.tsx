@@ -38,7 +38,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
     .eq('status', 'published')
     .neq('slug', slug)
     .order('created_at', { ascending: false })
-    .limit(8)
+    .limit(5)
 
   return (
     <>
