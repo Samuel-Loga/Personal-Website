@@ -23,7 +23,7 @@ const certifications = [
     logo: '/logos/nhss.jpg',
   },
   {
-    title: "Certified in Cybersecurity (CC) – Ongoing",
+    title: "Certified in Cybersecurity (CC)",
     issuer: "ISC2",
     grade: "Status: Exam Passed",
     date: "May 2025",
