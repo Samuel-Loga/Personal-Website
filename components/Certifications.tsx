@@ -29,6 +29,20 @@ const certifications = [
     date: "May 2025",
     logo: '/logos/ISC2.png',
   },
+    {
+    title: "Vulnerability Management",
+    issuer: "Qualys",
+    grade: "Certificate of Completion",
+    date: "Aug 2025",
+    logo: '/logos/qualys.jpg',
+  },
+  {
+    title: "FCF - Introduction to the Threat Landscape 3.0",
+    issuer: "Fortinet Training Institute",
+    grade: "Certificate of Completion",
+    date: "Aug 2025",
+    logo: '/logos/fortinet.webp',
+  },
   {
     title: "Junior Cybersecurity Analyst Career Path",
     issuer: "Cisco Networking Academy",

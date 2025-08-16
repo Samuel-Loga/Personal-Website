@@ -50,7 +50,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
             <div>
               {/* Post Header - Moved inside the grid column */}
               <div className="mb-4">
-                <h1 className="text-4xl lg:text-4xl font-bold mb-6 text-zinc-200">{post.title}</h1>
+                <h1 className="text-xl md:text-3xl font-bold mb-6 text-zinc-200">{post.title}</h1>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-4 text-sm text-zinc-400">
                         <div className="flex items-center gap-2">
