@@ -235,7 +235,15 @@ export default function CommentSection({ postId }: { postId: string }) {
                   {c.username}
                 </p>
                 <p className="text-xs text-zinc-400">
-                  {new Date(c.created_at).toLocaleDateString()}
+                  {new Date(c.created_at).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true,
+                  })}
                 </p>
               </div>
             </div>
@@ -250,7 +258,7 @@ export default function CommentSection({ postId }: { postId: string }) {
               {/* Like Button */}
               <button
                 onClick={() => handleReaction(c.id, 'like')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md transition-colors duration-300 ${
+                className={`flex items-center gap-1 pr-2 py-1 rounded-md transition-colors duration-300 ${
                   JSON.parse(localStorage.getItem('reacted_comments') || '{}')[c.id] === 'like'
                     ? 'text-teal-500 bg-teal-900/30'
                     : 'text-zinc-400 hover:text-teal-400 hover:bg-teal-900/20'

@@ -8,6 +8,7 @@ import ScrollToTopButton from '@/components/ScrollToTopButton'
 import CommentSectionWrapper from '@/components/CommentSectionWrapper'
 import Image from 'next/image'
 import { User, Calendar } from 'lucide-react'
+import ShareButtons from '@/components/ShareButtons';
 
 export default async function PostPage(props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params
@@ -59,7 +60,21 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
                         </div>
                         <div className="flex items-center gap-2">
                             <Calendar size={16} />
-                            <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                            <span>
+                              
+                              {/*new Date(post.created_at).toLocaleDateString()*/}
+
+                              {new Date(post.created_at).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true,
+                              })}
+
+                            </span>
                         </div>
                     </div>
                     <p className="text-sm text-zinc-400 mt-2 sm:mt-0">
@@ -85,9 +100,13 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
                 <div dangerouslySetInnerHTML={{ __html: post.content }} />
               </article>
 
-              <Link href="/blog" className="block mt-10 text-teal-500 hover:underline">
-                ← Back to Blog
-              </Link>
+              {/* Share blog post to Facebook, X (Twitter), LinkedIn or Copy Post Link */}
+              <div className="flex justify-between items-center mt-10">
+                <Link href="/blog" className="text-teal-500 hover:underline">
+                  ← Back to Blog
+                </Link>
+                <ShareButtons postTitle={post.title} />
+              </div>
 
               <CommentSectionWrapper postId={post.id} />
             </div>
