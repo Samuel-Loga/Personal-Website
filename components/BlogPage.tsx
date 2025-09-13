@@ -67,9 +67,9 @@ export default function BlogPage() {
 
       {/* Post Container */}
       {loading ? (
-        <p className="text-center text-zinc-500">Loading...</p>
+        <p className="text-center text-zinc-500 py-9">Loading...</p>
       ) : filteredPosts.length === 0 ? (
-        <p className="text-center text-zinc-500">No posts found.</p>
+        <p className="text-center text-zinc-500 py-9">No posts found.</p>
       ) : (
         <div
           className={
