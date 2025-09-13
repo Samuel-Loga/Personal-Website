@@ -82,7 +82,7 @@ export default function BlogPage() {
             <Link
               key={post.id}
               href={`/blog/${post.slug}`}
-              className="rounded-lg overflow-hidden shadow hover:shadow-lg transition-all bg-white"
+              className="rounded-lg overflow-hidden shadow hover:shadow-lg transition-all bg-[#101828]"
             >
               {post.cover_image && (
                 <div className="relative w-full h-48 bg-[#101828]">
