@@ -12,6 +12,29 @@ type Comment = {
   created_at: string
 }
 
+// Tailwind color classes for avatar backgrounds
+const avatarColors = [
+  'bg-teal-600',
+  'bg-blue-600',
+  'bg-purple-600',
+  'bg-pink-600',
+  'bg-red-600',
+  'bg-yellow-600',
+  'bg-green-600',
+  'bg-indigo-600',
+  'bg-orange-600',
+  'bg-rose-600',
+]
+
+// Function to assign a consistent color based on username
+function getAvatarColor(username: string) {
+  let hash = 0
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return avatarColors[Math.abs(hash) % avatarColors.length]
+}
+
 export default function CommentSection({ postId }: { postId: string }) {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -201,8 +224,8 @@ export default function CommentSection({ postId }: { postId: string }) {
           >
             {/* Comment Header */}
             <div className="flex items-center gap-3 mb-3">
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white font-bold">
+              {/* Dynamic Avatar */}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${getAvatarColor(c.username)}`}>
                 {c.username.charAt(0).toUpperCase()}
               </div>
 
@@ -261,8 +284,6 @@ export default function CommentSection({ postId }: { postId: string }) {
           </div>
         ))}
       </div>
-
-
 
       {/* Comment Form */}
       <h3 className="text-xl font-semibold mb-4 text-zinc-300">Leave a Comment</h3>
