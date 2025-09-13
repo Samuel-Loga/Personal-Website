@@ -257,11 +257,11 @@ export default function CommentSection({ postId }: { postId: string }) {
         {comments.map((c) => (
           <div
             key={c.id}
-            className="p-4 bg-zinc-700/50 border border-zinc-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
+            className="p-4 bg-zinc-700/50 border border-zinc-700 rounded-lg shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
           >
             {/* Comment Header */}
             <div className="flex items-center gap-3 mb-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${getAvatarColor(c.username)}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold transition-transform duration-300 hover:scale-105 ${getAvatarColor(c.username)}`}>
                 {c.username.charAt(0).toUpperCase()}
               </div>
               <div>
@@ -326,7 +326,7 @@ export default function CommentSection({ postId }: { postId: string }) {
                 {replies[c.id].map((r) => (
                   <div
                     key={r.id}
-                    className="flex items-start gap-3 bg-zinc-800/40 p-3 rounded-md text-zinc-300 border border-zinc-700"
+                    className="flex items-start gap-3 bg-zinc-800/40 p-3 rounded-xl text-zinc-300 border border-zinc-700 transition-all duration-300 hover:shadow-md hover:scale-[1.01]"
                   >
                     {/* Reply Avatar */}
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${getAvatarColor(r.username)}`}>
@@ -334,7 +334,7 @@ export default function CommentSection({ postId }: { postId: string }) {
                     </div>
 
                     <div className="flex-1">
-                      <p className="font-semibold text-zinc-200">{r.username}</p>
+                      <p className="text-sm font-semibold text-zinc-200">{r.username}</p>
                       <p className="text-xs text-zinc-400">
                         {new Date(r.created_at).toLocaleString('en-US', {
                           year: 'numeric',
@@ -346,7 +346,7 @@ export default function CommentSection({ postId }: { postId: string }) {
                           hour12: true,
                         })}
                       </p>
-                      <p className="mt-1">{r.reply_text}</p>
+                      <p className="text-sm mt-1">{r.reply_text}</p>
                     </div>
                   </div>
                 ))}
@@ -359,20 +359,20 @@ export default function CommentSection({ postId }: { postId: string }) {
                 <input
                   type="text"
                   placeholder="Your Name"
-                  className="w-full p-2 rounded bg-zinc-800 text-zinc-200 border border-zinc-600"
+                  className="w-full px-4 py-2 text-zinc-300 bg-zinc-800 border border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
                   value={replyFormData[c.id]?.username || ''}
                   onChange={(e) => handleReplyChange(c.id, 'username', e.target.value)}
                 />
                 <input
                   type="email"
-                  placeholder="Your Email"
-                  className="w-full p-2 rounded bg-zinc-800 text-zinc-200 border border-zinc-600"
+                  placeholder="Your Email (won&apos;t be shown)"
+                  className="w-full px-4 py-2 text-zinc-300 bg-zinc-800 border border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
                   value={replyFormData[c.id]?.email || ''}
                   onChange={(e) => handleReplyChange(c.id, 'email', e.target.value)}
                 />
                 <textarea
                   placeholder="Write your reply..."
-                  className="w-full px-3 py-2 text-zinc-300 bg-zinc-800 border border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
+                  className="w-full px-4 py-2 text-zinc-300 bg-zinc-800 border border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
                   rows={2}
                   value={replyFormData[c.id]?.reply_text || ''}
                   onChange={(e) => handleReplyChange(c.id, 'reply_text', e.target.value)}
@@ -390,7 +390,7 @@ export default function CommentSection({ postId }: { postId: string }) {
       </div>
 
       {/* Comment Form */}
-      <h3 className="text-xl font-semibold mb-4 text-zinc-300">Leave a Comment</h3>
+      <h3 className="text-xl font-semibold mb-4 text-zinc-300">Leave a comment</h3>
       <form onSubmit={handleSubmitComment} className="space-y-4 mb-6">
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <input
@@ -402,7 +402,7 @@ export default function CommentSection({ postId }: { postId: string }) {
         />
         <input
           type="email"
-          placeholder="Your email (won’t be shown)"
+          placeholder="Your email (won&apos;t be shown)"
           className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
