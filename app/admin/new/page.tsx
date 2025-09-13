@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-// import { useRouter } from 'next/navigation' // Removed as it's not used
+import { JSX } from 'react'; 
 
 // Lexical Core
 import {
@@ -14,6 +14,14 @@ import {
   SELECTION_CHANGE_COMMAND,
   COMMAND_PRIORITY_CRITICAL,
   EditorState,
+  createCommand,
+  LexicalCommand,
+  DecoratorNode,
+  NodeKey,
+  SerializedLexicalNode,
+  Spread,
+  DOMConversionMap,
+  DOMConversionOutput
 } from 'lexical';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
@@ -41,44 +49,145 @@ import { $getNearestNodeOfType } from '@lexical/utils';
 // Lexical HTML
 import { $generateHtmlFromNodes } from '@lexical/html';
 
-// --- Components ---
+// --- Custom Image Node ---
 
-// Toolbar component for formatting options
+type SerializedImageNode = Spread<
+  {
+    src: string;
+    altText: string;
+  },
+  SerializedLexicalNode
+>;
+
+export class ImageNode extends DecoratorNode<JSX.Element> {
+  __src: string;
+  __alt: string;
+
+  static getType(): string {
+    return 'image';
+  }
+
+  static clone(node: ImageNode): ImageNode {
+    return new ImageNode(node.__src, node.__alt, node.__key);
+  }
+
+  constructor(src: string, altText: string, key?: NodeKey) {
+    super(key);
+    this.__src = src;
+    this.__alt = altText;
+  }
+  
+  static importJSON(serializedNode: SerializedImageNode): ImageNode {
+    const { src, altText } = serializedNode;
+    return $createImageNode(src, altText);
+  }
+
+  exportJSON(): SerializedImageNode {
+    return {
+      src: this.__src,
+      altText: this.__alt,
+      type: 'image',
+      version: 1,
+    };
+  }
+  
+  static importDOM(): DOMConversionMap | null {
+    return {
+      img: (node: Node) => ({
+        conversion: (domNode: Node): DOMConversionOutput | null => {
+          const img = domNode as HTMLImageElement;
+          const { alt, src } = img;
+          if (src) {
+            return { node: $createImageNode(src, alt) };
+          }
+          return null;
+        },
+        priority: 0,
+      }),
+    };
+  }
+
+  exportDOM() {
+      const element = document.createElement('img');
+      element.setAttribute('src', this.__src);
+      element.setAttribute('alt', this.__alt);
+      return { element };
+  }
+
+  createDOM(): HTMLElement {
+    const div = document.createElement('div');
+    div.style.display = 'contents';
+    return div;
+  }
+
+  updateDOM(): false {
+    return false;
+  }
+
+  decorate(): JSX.Element {
+    return <img src={this.__src} alt={this.__alt} className="my-4 rounded-lg shadow-md max-w-full mx-auto" />;
+  }
+}
+
+export function $createImageNode(src: string, altText: string): ImageNode {
+  return new ImageNode(src, altText);
+}
+
+export function $isImageNode(node: any): node is ImageNode {
+  return node instanceof ImageNode;
+}
+
+export const INSERT_IMAGE_COMMAND: LexicalCommand<string> = createCommand();
+
+// --- Image Upload Plugin ---
+
+function ImageUploadPlugin(): JSX.Element | null {
+  const [editor] = useLexicalComposerContext();
+
+  useEffect(() => {
+    return editor.registerCommand(
+      INSERT_IMAGE_COMMAND,
+      (payload: string) => {
+        const selection = $getSelection();
+        if ($isRangeSelection(selection)) {
+          const imageNode = $createImageNode(payload, 'Uploaded image');
+          selection.insertNodes([imageNode]);
+        }
+        return true;
+      },
+      COMMAND_PRIORITY_CRITICAL,
+    );
+  }, [editor]);
+
+  return null;
+}
+
+// --- Toolbar ---
 function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext();
   const [activeEditor, setActiveEditor] = useState(editor);
   const [blockType, setBlockType] = useState('paragraph');
   const [isLink, setIsLink] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
     if ($isRangeSelection(selection)) {
       const anchorNode = selection.anchor.getNode();
-      const element =
-        anchorNode.getKey() === 'root'
-          ? anchorNode
-          : anchorNode.getTopLevelElementOrThrow();
-
+      const element = anchorNode.getKey() === 'root' ? anchorNode : anchorNode.getTopLevelElementOrThrow();
       const elementKey = element.getKey();
       const elementDOM = activeEditor.getElementByKey(elementKey);
 
-      // Link check
       const parent = anchorNode.getParent();
-      if ($isLinkNode(parent) || $isLinkNode(anchorNode)) {
-        setIsLink(true);
-      } else {
-        setIsLink(false);
-      }
+      setIsLink($isLinkNode(parent) || $isLinkNode(anchorNode));
 
       if (elementDOM !== null) {
         if ($isListNode(element)) {
           const parentList = $getNearestNodeOfType(anchorNode, ListNode);
-          const type = parentList ? parentList.getTag() : element.getTag();
+          const type = parentList ? parentList.getTag() : (element as ListNode).getTag();
           setBlockType(type);
         } else {
-          const type = $isHeadingNode(element)
-            ? element.getTag()
-            : element.getType();
+          const type = $isHeadingNode(element) ? element.getTag() : element.getType();
           setBlockType(type);
         }
       }
@@ -86,136 +195,108 @@ function ToolbarPlugin() {
   }, [activeEditor]);
 
   useEffect(() => {
-    return editor.registerCommand(
-      SELECTION_CHANGE_COMMAND,
-      (_payload: unknown, newEditor: LexicalEditorType) => {
-        updateToolbar();
-        setActiveEditor(newEditor);
-        return false;
-      },
-      COMMAND_PRIORITY_CRITICAL,
-    );
+    return editor.registerCommand(SELECTION_CHANGE_COMMAND, (_payload, newEditor) => {
+      updateToolbar();
+      setActiveEditor(newEditor as LexicalEditorType);
+      return false;
+    }, COMMAND_PRIORITY_CRITICAL);
   }, [editor, updateToolbar]);
 
   const formatHeading = (headingSize: 'h1' | 'h2' | 'h3') => {
-    if (blockType !== headingSize) {
-      editor.update(() => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $wrapNodes(selection, () => blockType !== headingSize ? $createHeadingNode(headingSize) : $createParagraphNode());
+      }
+    });
+  };
+  
+  const formatQuote = () => {
+    editor.update(() => {
         const selection = $getSelection();
         if ($isRangeSelection(selection)) {
-          $wrapNodes(selection, () => $createHeadingNode(headingSize));
+            $wrapNodes(selection, () => blockType !== 'quote' ? $createQuoteNode() : $createParagraphNode());
         }
-      });
-    } else {
-        editor.update(() => {
-            const selection = $getSelection();
-            if ($isRangeSelection(selection)) {
-                $wrapNodes(selection, () => $createParagraphNode());
-            }
-        });
-    }
+    });
   };
 
-  const formatQuote = () => {
-    if (blockType !== 'quote') {
-        editor.update(() => {
-            const selection = $getSelection();
-            if ($isRangeSelection(selection)) {
-                $wrapNodes(selection, () => $createQuoteNode());
-            }
-        });
-    } else {
-        editor.update(() => {
-            const selection = $getSelection();
-            if ($isRangeSelection(selection)) {
-                $wrapNodes(selection, () => $createParagraphNode());
-            }
-        });
-    }
-  };
-
-  const formatBulletList = () => {
-    if (blockType !== 'ul') {
-      editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
-    } else {
-      editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
-    }
-  };
-
-  const formatNumberedList = () => {
-    if (blockType !== 'ol') {
-      editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
-    } else {
-        editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
-    }
-  };
+  const formatBulletList = () => editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+  const formatNumberedList = () => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
 
   const formatCode = () => {
-    if (blockType !== 'code') {
-        editor.update(() => {
-            const selection = $getSelection();
-            if ($isRangeSelection(selection)) {
-                $wrapNodes(selection, () => $createCodeNode());
-            }
-        });
-    } else {
-        editor.update(() => {
-            const selection = $getSelection();
-            if ($isRangeSelection(selection)) {
-                $wrapNodes(selection, () => $createParagraphNode());
-            }
-        });
-    }
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $wrapNodes(selection, () => blockType !== 'code' ? $createCodeNode() : $createParagraphNode());
+      }
+    });
   };
 
   const insertLink = useCallback(() => {
     if (!isLink) {
       const url = prompt('Enter the URL:');
-      if (url) {
-        editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
-      }
+      if (url) editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
     } else {
       editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
     }
   }, [editor, isLink]);
 
-  // NOTE: Proper image handling requires a custom Lexical node.
-  // This is a placeholder to show where the functionality would go.
-  const insertImage = () => {
-    alert('Image insertion requires a custom Lexical node, which is an advanced topic. This button is a placeholder.');
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const fileName = `${Date.now()}-${file.name}`;
+    const { data, error } = await supabase.storage.from('blog-images').upload(fileName, file);
+
+    if (error) {
+      alert(`Error uploading image: ${error.message}`);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('blog-images').getPublicUrl(fileName);
+    
+    if (publicUrl) {
+      editor.dispatchCommand(INSERT_IMAGE_COMMAND, publicUrl);
+    }
+    
+    if(fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
   };
 
   return (
     <div className="flex flex-wrap items-center gap-2 p-2 border-b border-gray-300 dark:border-gray-600 rounded-t-md bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-        <button onClick={() => formatHeading('h1')} className={`p-2 rounded ${blockType === 'h1' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Heading 1">H1</button>
-        <button onClick={() => formatHeading('h2')} className={`p-2 rounded ${blockType === 'h2' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Heading 2">H2</button>
-        <button onClick={() => formatHeading('h3')} className={`p-2 rounded ${blockType === 'h3' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Heading 3">H3</button>
+        <input type="file" accept="image/*" onChange={handleImageUpload} ref={fileInputRef} style={{ display: 'none' }} />
+        <button type="button" onClick={() => formatHeading('h1')} className={`p-2 rounded ${blockType === 'h1' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Heading 1">H1</button>
+        <button type="button" onClick={() => formatHeading('h2')} className={`p-2 rounded ${blockType === 'h2' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Heading 2">H2</button>
+        <button type="button" onClick={() => formatHeading('h3')} className={`p-2 rounded ${blockType === 'h3' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Heading 3">H3</button>
         <div className="h-6 w-px bg-gray-300 dark:bg-gray-500 mx-1"></div>
-        <button onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')} className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Bold">
+        <button type="button" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')} className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Bold">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path></svg>
         </button>
-        <button onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic')} className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Italic">
+        <button type="button" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic')} className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Italic">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="4" x2="10" y2="4"></line><line x1="14" y1="20" x2="5" y2="20"></line><line x1="15" y1="4" x2="9" y2="20"></line></svg>
         </button>
-        <button onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')} className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Underline">
+        <button type="button" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')} className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Underline">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path><line x1="4" y1="21" x2="20" y2="21"></line></svg>
         </button>
         <div className="h-6 w-px bg-gray-300 dark:bg-gray-500 mx-1"></div>
-        <button onClick={formatQuote} className={`p-2 rounded ${blockType === 'quote' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Quote">
+        <button type="button" onClick={formatQuote} className={`p-2 rounded ${blockType === 'quote' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Quote">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v6c0 7 4 8 8 8Z"/><path d="M14 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v6c0 7 4 8 8 8Z"/></svg>
         </button>
-        <button onClick={formatBulletList} className={`p-2 rounded ${blockType === 'ul' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Bulleted List">
+        <button type="button" onClick={formatBulletList} className={`p-2 rounded ${blockType === 'ul' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Bulleted List">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
         </button>
-        <button onClick={formatNumberedList} className={`p-2 rounded ${blockType === 'ol' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Numbered List">
+        <button type="button" onClick={formatNumberedList} className={`p-2 rounded ${blockType === 'ol' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Numbered List">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4"></path><path d="M4 10h2"></path><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg>
         </button>
-        <button onClick={formatCode} className={`p-2 rounded ${blockType === 'code' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Code Block">
+        <button type="button" onClick={formatCode} className={`p-2 rounded ${blockType === 'code' ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Code Block">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
         </button>
-        <button onClick={insertLink} className={`p-2 rounded ${isLink ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Insert Link">
+        <button type="button" onClick={insertLink} className={`p-2 rounded ${isLink ? 'bg-gray-300 dark:bg-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`} title="Insert Link">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg>
         </button>
-        <button onClick={insertImage} className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Insert Image (Placeholder)">
+        <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Insert Image">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
         </button>
     </div>
@@ -234,7 +315,7 @@ function LexicalEditor({ onChange }: LexicalEditorProps) {
       ltr: 'text-left',
       rtl: 'text-right',
       paragraph: 'mb-2',
-      quote: 'border-l-4 border-zinc-300 pl-4 italic my-4',
+      quote: 'border-l-4 border-gray-300 pl-4 italic my-4',
       heading: {
         h1: 'text-3xl font-bold mb-4',
         h2: 'text-2xl font-semibold mb-3',
@@ -244,8 +325,9 @@ function LexicalEditor({ onChange }: LexicalEditorProps) {
         ul: 'list-disc list-inside my-4 pl-4',
         ol: 'list-decimal list-inside my-4 pl-4',
       },
-      link: 'text-teal-500 hover:underline',
-      code: 'bg-blue-600/20 border border-zinc-700 text-sm font-mono p-6 my-4 block overflow-x-auto rounded-md',
+      link: 'text-blue-500 hover:underline',
+      code: 'bg-zinc-700/50 text-sm font-mono p-4 my-4 block overflow-x-auto rounded-md',
+      image: 'block my-4',
     },
     onError(error: Error) {
       throw error;
@@ -262,10 +344,11 @@ function LexicalEditor({ onChange }: LexicalEditorProps) {
       TableRowNode,
       AutoLinkNode,
       LinkNode,
+      ImageNode, // Register the custom image node
     ],
   };
 
-  const handleOnChange = (_editorState: EditorState, editor: LexicalEditorType) => {
+  const handleOnChange = (editorState: EditorState, editor: LexicalEditorType) => {
     editor.update(() => {
       const htmlString = $generateHtmlFromNodes(editor, null);
       onChange(htmlString);
@@ -287,6 +370,7 @@ function LexicalEditor({ onChange }: LexicalEditorProps) {
         <ListPlugin />
         <LinkPlugin />
         <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+        <ImageUploadPlugin />
         <OnChangePlugin onChange={handleOnChange} />
       </div>
     </LexicalComposer>
@@ -309,6 +393,12 @@ export default function NewPostPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
+    if (!title.trim()) {
+        setMessage('❌ Error: Title cannot be empty.');
+        setLoading(false);
+        return;
+    }
 
     const strippedContent = content.replace(/<(.|\n)*?>/g, '').trim();
     if (!strippedContent) {
@@ -347,20 +437,20 @@ export default function NewPostPage() {
   }
 
   return (
-    <section className="px-4 sm:px-6 w-full pt-30 pb-10 bg-[#181818] relative" >
-      <div className="max-w-6xl mx-auto relative bg-white dark:bg-gray-900 shadow-lg rounded-lg p-8">
-        <h1 className="text-3xl font-bold mb-8 text-zinc-900 dark:text-white">📝 Create New Blog Post</h1>
+    <section className="px-4 sm:px-6 w-full py-10 md:py-12 bg-zinc-800 text-white relative" >
+      <div className="max-w-6xl mx-auto mt-21 text-zinc-300 relative">
+        <h1 className="text-3xl font-bold mb-8 tracking-tight">Create New Blog Post 📝</h1>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-x-8">
           
           {/* Left Column for Inputs */}
           <div className="lg:col-span-1 flex flex-col gap-y-4">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
               <input
                 id="title"
                 type="text"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -368,11 +458,11 @@ export default function NewPostPage() {
             </div>
 
             <div>
-              <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Slug</label>
+              <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slug</label>
               <input
                 id="slug"
                 type="text"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 required
@@ -380,22 +470,22 @@ export default function NewPostPage() {
             </div>
 
             <div>
-              <label htmlFor="coverImage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cover Image URL</label>
+              <label htmlFor="coverImage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cover Image URL</label>
               <input
                 id="coverImage"
                 type="text"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
                 value={coverImage}
                 onChange={(e) => setCoverImage(e.target.value)}
               />
             </div>
 
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
               <input
                 id="category"
                 type="text"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 required
@@ -403,10 +493,11 @@ export default function NewPostPage() {
             </div>
 
             <div>
-              <label htmlFor="excerpt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Excerpt</label>
+              <label htmlFor="excerpt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Excerpt</label>
               <textarea
                 id="excerpt"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white min-h-[120px]"
+                className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
+                rows={5}
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
                 required
@@ -414,10 +505,10 @@ export default function NewPostPage() {
             </div>
 
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
               <select
                 id="status"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
@@ -428,16 +519,16 @@ export default function NewPostPage() {
           </div>
 
           {/* Right Column for Content Editor and Actions */}
-          <div className="lg:col-span-2 flex flex-col gap-y-4 mt-6 lg:mt-0">
+          <div className="lg:col-span-2 flex flex-col gap-y-6 mt-6 lg:mt-0">
             <div className="flex-grow">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content</label>
+              <label className="block text-sm font-semibold text-zinc-300 dark:text-gray-300 mb-2">Content</label>
               <LexicalEditor onChange={setContent} />
             </div>
 
-            <div className="flex items-center gap-8 mt-6">
+            <div className="flex items-center gap-4">
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-600/20 text-white border border-zinc-700 rounded-md hover:bg-blue-900/20 transition inline-flex"
+                className="px-8 py-2 bg-[#364153] text-white border border-zinc-500 rounded-md hover:bg-blue-900/20 transition inline-flex"
                 disabled={loading}
               >
                 {loading ? 'Submitting...' : 'Submit Post'}
