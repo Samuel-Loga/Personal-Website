@@ -4,9 +4,9 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Mail, PlusCircle, Edit, Trash2 } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient'; // Make sure this path is correct
+import { supabase } from '@/lib/supabaseClient';
 
-// --- Type Definitions matching your Supabase Schema ---
+// --- Type Definitions ---
 type Post = {
   id: string; // uuid
   title: string;
@@ -18,7 +18,7 @@ type Post = {
   updated_at: string;
   excerpt: string;
   category: string;
-  // For the UI, we'll need to calculate these
+  // For the UI, we will need to calculate these
   comments_count?: number;
   likes_count?: number;
 };
@@ -44,11 +44,10 @@ type Category = {
 type Subscriber = {
     id: number;
     email: string;
-    subscribed_at: string;
+    created_at: string;
 };
 
 type Status = 'Published' | 'Draft' | 'Unpublished';
-
 
 // --- Main Dashboard Component ---
 export default function AdminDashboardPage() {
@@ -65,6 +64,7 @@ export default function AdminDashboardPage() {
   
   const [newsletterSubject, setNewsletterSubject] = useState('');
   const [newsletterContent, setNewsletterContent] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   // --- Set Page Title ---
   useEffect(() => {
@@ -111,10 +111,18 @@ export default function AdminDashboardPage() {
           }));
           setComments(formattedComments);
       }
-      
-      // Fetch Subscribers (assuming you have a 'subscribers' table)
-      // const { data: subscribersData, error: subscribersError } = await supabase.from('subscribers').select('*');
-      // if (subscribersData) setSubscribers(subscribersData);
+
+      // Fetch Subscribers
+      const { data: subscribersData, error: subscribersError } = await supabase
+        .from('subscribers')
+        .select('*')
+        .order('created_at', { ascending: false }); // Get newest first
+
+      if (subscribersError) {
+        console.error('Error fetching subscribers:', subscribersError);
+      } else if (subscribersData) {
+        setSubscribers(subscribersData);
+      }
 
       setLoading(false);
     };
@@ -154,7 +162,7 @@ export default function AdminDashboardPage() {
   
   const handleCategorySubmit = async (e: React.FormEvent) => {
       e.preventDefault();
-      // Category management is complex as it's a derived field. 
+      // Category management is complex as it is a derived field. 
       // A real implementation would involve updating the 'category' field on all relevant posts.
       // This is a simplified UI-only version.
       if (editingCategory) {
@@ -175,17 +183,52 @@ export default function AdminDashboardPage() {
       setIsCategoryModalOpen(true);
   };
 
-  const sendNewsletter = (e: React.FormEvent) => {
+  // Removed duplicate sendNewsletter function to resolve redeclaration error.
+
+  const handleDeleteSubscriber = async (id: number) => {
+      if (window.confirm('Are you sure you want to remove this subscriber?')) {
+          const { error } = await supabase.from('subscribers').delete().match({ id });
+          if (error) {
+              alert(`Error removing subscriber: ${error.message}`);
+          } else {
+              setSubscribers(subscribers.filter(s => s.id !== id));
+              alert('Subscriber removed.');
+          }
+      }
+  };
+
+  {/* --- Newsletter Sending Handler (with Edge Function) --- */}
+  const sendNewsletter = async (e: React.FormEvent) => {
       e.preventDefault();
-      if(!newsletterSubject || !newsletterContent) {
-          alert('Please fill in both subject and content for the newsletter.');
+      if (!newsletterSubject || !newsletterContent) {
+          alert('Please fill in both the subject and content.');
           return;
       }
-      // This requires a Supabase Edge Function to securely send emails.
-      alert(`This would trigger an Edge Function to send the newsletter to ${subscribers.length} subscribers.`);
-      setNewsletterSubject('');
-      setNewsletterContent('');
-  };
+      if (subscribers.length === 0) {
+          alert('There are no subscribers to send to.');
+          return;
+      }
+
+      setIsSending(true);
+
+      // Invoke the Supabase Edge Function named 'send-newsletter'
+      const { error } = await supabase.functions.invoke('send-newsletter', {
+          body: {
+              subject: newsletterSubject,
+              content: newsletterContent,
+          },
+      });
+
+      setIsSending(false);
+
+      if (error) {
+          alert(`Error sending newsletter: ${error.message}`);
+      } else {
+          alert('Newsletter has been sent successfully!');
+          setNewsletterSubject('');
+          setNewsletterContent('');
+      }
+  };  
 
   if (loading) {
     return <div className="bg-gray-900 text-white flex justify-center items-center min-h-screen">Loading Dashboard...</div>;
@@ -196,7 +239,7 @@ export default function AdminDashboardPage() {
       <div className="max-w-6xl mx-auto pt-24">
         <header className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back. Here's an overview of your blog.</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back. Here&apos;s an overview of your blog.</p>
         </header>
 
         {/* Stat Cards */}
@@ -248,17 +291,87 @@ export default function AdminDashboardPage() {
 
                 {/* Comments Management */}
                 <ManagementSection title="Moderate Comments">
-                     <DataTable
-                        headers={['Author', 'Comment', 'In Response To', 'Status', 'Actions']}
-                        rows={comments.map(comment => [
-                            comment.username,
-                            <p className="truncate w-32" title={comment.comment}>{comment.comment}</p>,
-                            <p className="truncate w-32" title={comment.post_title}>{comment.post_title}</p>,
-                            <StatusPill status={comment.status || 'Published'} />,
+                <DataTable
+                    headers={[
+                    'Author',
+                    'Email',
+                    'Comment',
+                    'In Response To',
+                    'Posted On',
+                    'Status',
+                    'Actions'
+                    ]}
+                    rows={comments.map(comment => [
+                    comment.username,
+                    comment.email,
+                    <p className="truncate w-32" title={comment.comment}>
+                        {comment.comment}
+                    </p>,
+                    <p className="truncate w-32" title={comment.post_title}>
+                        {comment.post_title}
+                    </p>,
+                    
+                    // Prevent line breaks for datetime
+                    <span
+                        className="whitespace-nowrap block"
+                        title={new Date(comment.created_at).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true,
+                        })}
+                    >
+                        {comment.created_at
+                        ? new Date(comment.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: true,
+                            })
+                        : ''}
+                    </span>,
+
+                    <StatusPill status={comment.status || 'Published'} />,
+
+                    <ItemActions
+                        onEdit={() =>
+                        handleUpdateCommentStatus(
+                            comment.id,
+                            comment.status === 'Published' ? 'Unpublished' : 'Published'
+                        )
+                        }
+                        editLabel={comment.status === 'Published' ? 'Unpublish' : 'Publish'}
+                        onDelete={() => alert(`Deleting comment ${comment.id}`)}
+                    />
+                    ])}
+                />
+                </ManagementSection>
+
+
+                {/* Subscribers Management */}
+                <ManagementSection title={`Manage Subscribers (${subscribers.length})`}>
+                    <DataTable
+                        headers={['Email Address', 'Subscribed On', 'Actions']}
+                        rows={subscribers.map(sub => [
+                            sub.email,
+                            new Date(sub.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true,
+                              }),
                             <ItemActions
-                                onEdit={() => handleUpdateCommentStatus(comment.id, comment.status === 'Published' ? 'Unpublished' : 'Published')}
-                                editLabel={comment.status === 'Published' ? 'Unpublish' : 'Publish'}
-                                onDelete={() => alert(`Deleting comment ${comment.id}`)}
+                                onEdit={() => alert('Edit functionality can be added here.')}
+                                onDelete={() => handleDeleteSubscriber(sub.id)}
                             />
                         ])}
                     />
@@ -296,7 +409,7 @@ export default function AdminDashboardPage() {
                             <textarea id="content" rows={6} value={newsletterContent} onChange={e => setNewsletterContent(e.target.value)} className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"></textarea>
                         </div>
                         <button type="submit" className="w-full flex justify-center items-center gap-2 px-6 py-2 bg-blue-600/20 text-white border border-zinc-700 rounded-md hover:bg-blue-900/20 transition inline-flex">
-                            <Mail size={18} /> Send to {subscribers.length} Subscribers
+                            {isSending ? 'Sending...' : <><Mail size={18} /> Send to {subscribers.length} Subscribers</>}
                         </button>
                     </form>
                 </ManagementSection>
