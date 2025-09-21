@@ -3,7 +3,7 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Mail, PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { Mail, PlusCircle, Edit, Trash2, Newspaper, MessageSquare, Folder, Users, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
 // --- Type Definitions ---
@@ -47,7 +47,7 @@ type Subscriber = {
     created_at: string;
 };
 
-type Status = 'Published' | 'Draft' | 'Unpublished' | 'pending' | 'confirmed';
+type Status = 'Published' | 'published' | 'Draft' | 'draft' | 'Unpublished' | 'unpublished' | 'pending' | 'confirmed';
 
 type FetchedComment = Comment & {
   posts: { title: string };
@@ -69,6 +69,12 @@ export default function AdminDashboardPage() {
   const [newsletterSubject, setNewsletterSubject] = useState('');
   const [newsletterContent, setNewsletterContent] = useState('');
   const [isSending, setIsSending] = useState(false);
+
+  // --- Logout Handler ---
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
 
   // --- Set Page Title ---
   useEffect(() => {
@@ -240,18 +246,47 @@ export default function AdminDashboardPage() {
   return (
     <div className="bg-zinc-800 min-h-screen p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
       <div className="max-w-6xl mx-auto pt-24">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back. Here&apos;s an overview of your blog.</p>
+        <header className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back. Here&apos;s an overview of your blog.</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-sm text-zinc-300 py-2 px-4 border border-zinc-700 rounded-md hover:bg-zinc-700 transition"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
         </header>
 
         {/* Stat Cards */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard title="Total Posts" value={posts.length} />
-            <StatCard title="Total Comments" value={comments.length} />
-            <StatCard title="Categories" value={categories.length} />
-            <StatCard title="Newsletter Subscribers" value={subscribers.length} />
-        </section>
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatCard 
+              title="Total Posts" 
+              value={posts.length} 
+              icon={<Newspaper size={24} className="text-teal-400" />} 
+              color="teal"
+          />
+          <StatCard 
+              title="Total Comments" 
+              value={comments.length} 
+              icon={<MessageSquare size={24} className="text-sky-400" />} 
+              color="sky"
+          />
+          <StatCard 
+              title="Post Categories" 
+              value={categories.length} 
+              icon={<Folder size={24} className="text-amber-400" />} 
+              color="amber"
+          />
+          <StatCard 
+              title="Newsletter Subscribers" 
+              value={subscribers.length} 
+              icon={<Users size={24} className="text-indigo-400" />} 
+              color="indigo"
+          />
+      </section>
 
         {/* Engagement Chart (Using placeholder data) */}
         <section className="bg-gray-900 p-6 rounded-lg shadow-md mb-8">
@@ -283,7 +318,7 @@ export default function AdminDashboardPage() {
                     rows={posts.map((post, index) => (
                       <tr 
                         key={post.id}
-                        className={`hover:bg-zinc-700/50 ${index % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/50'}`}
+                        className={`hover:bg-teal-900/20 ${index % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/50'}`}
                       >
                         <td className="px-4 py-3 text-zinc-300"><p className="truncate w-32" title={post.title}>{post.title}</p></td>
                         <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{post.category}</td>
@@ -303,7 +338,7 @@ export default function AdminDashboardPage() {
                       headers={['Author', 'Email', 'Comment', 'In Response To', 'Posted On', 'Status', 'Actions']}
                       rows={comments.map((comment, index) => (
                         <tr key={comment.id}
-                          className={`hover:bg-zinc-700/50 ${index % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/50'}`}
+                          className={`hover:bg-teal-900/20 ${index % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/50'}`}
                         >
                           <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{comment.username}</td>
                           <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{comment.email}</td>
@@ -325,8 +360,8 @@ export default function AdminDashboardPage() {
                     rows={subscribers.map((sub, index) => (
                       <tr 
                         key={sub.id}
-                        // --- This is where the Zebra Striping is added ---
-                        className={`hover:bg-zinc-700/50 ${index % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/50'}`}
+                        // --- Zebra Striping ---
+                        className={`hover:bg-teal-900/20 ${index % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/50'}`}
                       >
                         <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{sub.email}</td>
                         <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{new Date(sub.created_at).toLocaleDateString('en-US', {
@@ -417,13 +452,28 @@ export default function AdminDashboardPage() {
 
 // --- Reusable UI Components with Types ---
 
-type StatCardProps = { title: string; value: number | string; };
-const StatCard = ({ title, value }: StatCardProps) => (
-  <div className="bg-zinc-700/50 p-6 rounded-lg shadow-md">
-    <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
-    <p className="text-3xl text-zinc-300 font-bold">{value}</p>
-  </div>
-);
+type StatCardProps = { title: string; value: number | string; icon: React.ReactNode; color: 'teal' | 'sky' | 'amber' | 'indigo'; };
+const StatCard = ({ title, value, icon, color }: StatCardProps) => {
+  // Map the color prop to specific Tailwind CSS classes
+  const colorClasses: Record<string, string> = {
+    teal: 'bg-teal-900/50',
+    sky: 'bg-sky-900/50',
+    amber: 'bg-amber-900/50',
+    indigo: 'bg-indigo-900/50',
+  };
+
+  return (
+    <div className={`p-6 rounded-lg shadow-md flex items-center gap-4 ${colorClasses[color]}`}>
+      <div className="bg-zinc-800 p-3 rounded-full">
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm text-gray-300">{title}</p>
+        <p className="text-2xl text-white font-bold">{value}</p>
+      </div>
+    </div>
+  );
+};
 
 type ManagementSectionProps = { title: string; children: ReactNode; button?: ReactNode | null; };
 const ManagementSection = ({ title, children, button = null }: ManagementSectionProps) => (
@@ -437,22 +487,26 @@ const ManagementSection = ({ title, children, button = null }: ManagementSection
 );
 
 type DataTableProps = { headers: string[]; rows: ReactNode[]; };
-const DataTable = ({ headers, rows }: DataTableProps) => {
+const DataTable = ({ headers, rows }: { headers: string[]; rows: React.ReactNode[] }) => {
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-700 bg-zinc-900">
+    <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900">
       <table className="w-full text-sm">
-        <thead className="bg-zinc-800">
+        {/* Table Header with Teal Accent */}
+        <thead className="bg-teal-900/30">
           <tr>
             {headers.map((h) => (
-              <th key={h} className="px-4 py-3 font-medium text-zinc-400 text-left whitespace-nowrap"               >
+              <th
+                key={h}
+                className="px-4 py-3 font-semibold text-teal-400 text-left whitespace-nowrap"
+              >
                 {h}
               </th>
             ))}
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-zinc-700">
-          {/* --- The "Empty State" Check --- */}
+        {/* Table Body with updated dividers */}
+        <tbody className="divide-y divide-zinc-800">
           {rows.length === 0 ? (
             <tr>
               <td
@@ -463,7 +517,6 @@ const DataTable = ({ headers, rows }: DataTableProps) => {
               </td>
             </tr>
           ) : (
-            // --- We just render the rows passed in as props ---
             rows
           )}
         </tbody>
@@ -474,16 +527,30 @@ const DataTable = ({ headers, rows }: DataTableProps) => {
 
 type StatusPillProps = { status: Status; };
 const StatusPill = ({ status }: StatusPillProps) => {
-    const baseClasses = "text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block";
-    const statusClasses: Record<Status, string> = {
-        Published: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-        Draft: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-        Unpublished: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-        // Adding statuses for subscribers for consistency
-        confirmed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-        pending: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
-    };
-    return <span className={`${baseClasses} ${statusClasses[status] || ''}`}>{status}</span>;
+  // Gracefully handle null or undefined status
+  if (!status) return null;
+
+  // 1. Format the status to be consistent (e.g., "published" -> "Published")
+  const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
+  const baseClasses = "text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block";
+  
+  // 2. The keys here remain in Title Case, as this is our standard
+  const statusClasses: Record<string, string> = {
+    Published: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+    Draft: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    Unpublished: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+    // Adding statuses for subscribers for consistency
+    confirmed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+    pending: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+  };
+  
+  return (
+    // 3. Use the formattedStatus for both the style lookup and the displayed text
+    <span className={`${baseClasses} ${statusClasses[formattedStatus] || ''}`}>
+      {formattedStatus}
+    </span>
+  );
 };
 
 type ItemActionsProps = { onEdit: () => void; onDelete: () => void; editLabel?: string; };
