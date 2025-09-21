@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabaseClient';
 type Post = {
   id: string; // uuid
   title: string;
-  status: 'Published' | 'Draft';
+  status?: 'Published' | 'Draft';
   content: string;
   cover_image: string;
   created_by: string;
@@ -47,7 +47,7 @@ type Subscriber = {
     created_at: string;
 };
 
-type Status = 'Published' | 'Draft' | 'Unpublished';
+type Status = 'Published' | 'Draft' | 'Unpublished' | 'pending' | 'confirmed';
 
 type FetchedComment = Comment & {
   posts: { title: string };
@@ -279,13 +279,19 @@ export default function AdminDashboardPage() {
                     }
                 >
                   <DataTable
-                    headers={['Title', 'Status', 'Category', 'Actions']}
-                    rows={posts.map(post => (
-                      <tr key={post.id}> {/* <-- ADD KEY HERE */}
-                        <td>{post.title}</td>
-                        <td><StatusPill status={post.status} /></td>
-                        <td>{post.category}</td>
-                        <td><ItemActions onEdit={() => handleEditPost(post.id)} onDelete={() => handleDeletePost(post.id)} /></td>
+                    headers={['Title', 'Category', '# Comments', 'Created On', 'Updated On', 'Status' ,'Actions']}
+                    rows={posts.map((post, index) => (
+                      <tr 
+                        key={post.id}
+                        className={`hover:bg-zinc-700/50 ${index % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/50'}`}
+                      >
+                        <td className="px-4 py-3 text-zinc-300"><p className="truncate w-32" title={post.title}>{post.title}</p></td>
+                        <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{post.category}</td>
+                        <td className="px-4 py-3 text-zinc-300">{post.comments_count}</td>
+                        <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{new Date(post.created_at).toLocaleDateString('en-US', {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, })} </td> 
+                        <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{new Date(post.updated_at).toLocaleDateString('en-US', {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, })} </td>
+                        <td className="px-4 py-3 whitespace-nowrap"><StatusPill status={post.status || 'Published'} /></td>
+                        <td className="px-4 py-3"><ItemActions onEdit={() => handleEditPost(post.id)} onDelete={() => handleDeletePost(post.id)} /></td>
                       </tr>
                     ))}
                   />
@@ -295,126 +301,52 @@ export default function AdminDashboardPage() {
                 <ManagementSection title="Moderate Comments">
                     <DataTable
                       headers={['Author', 'Email', 'Comment', 'In Response To', 'Posted On', 'Status', 'Actions']}
-                      rows={comments.map(comment => (
-                        <tr key={comment.id}>
-                          <td>{comment.username}</td>
-                          <td>{comment.email}</td>
-                          <td><p className="truncate w-32" title={comment.comment}>{comment.comment}</p></td>
-                          <td><p className="truncate w-32" title={comment.post_title}>{comment.post_title}</p></td>
-                          <td>
-                            {/* Prevent line breaks for datetime */} 
-                            <span
-                                className="whitespace-nowrap block"
-                                title={new Date(comment.created_at).toLocaleString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit',
-                                hour12: true,
-                                })}
-                            >
-                                {comment.created_at
-                                ? new Date(comment.created_at).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'numeric',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    second: '2-digit',
-                                    hour12: true,
-                                    })
-                                : ''}
-                            </span>
-                          </td>
-                          <td><StatusPill status={comment.status || 'Published'} /></td>
-                          <td><ItemActions onEdit={() => handleUpdateCommentStatus(comment.id, comment.status === 'Published' ? 'Unpublished' : 'Published')} editLabel={comment.status === 'Published' ? 'Unpublish' : 'Publish'} onDelete={() => alert(`Deleting comment ${comment.id}`)} /></td>
+                      rows={comments.map((comment, index) => (
+                        <tr key={comment.id}
+                          className={`hover:bg-zinc-700/50 ${index % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/50'}`}
+                        >
+                          <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{comment.username}</td>
+                          <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{comment.email}</td>
+                          <td className="px-4 py-3 text-zinc-300"><p className="truncate w-40" title={comment.comment}>{comment.comment}</p></td>
+                          <td className="px-4 py-3 text-zinc-300"><p className="truncate w-40" title={comment.post_title}>{comment.post_title}</p></td>
+                          <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{new Date(comment.created_at).toLocaleDateString('en-US', {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, })} </td>  
+                          <td className="px-4 py-3"><StatusPill status={comment.status || 'Published'} /></td>
+                          <td className="px-4 py-3"><ItemActions onEdit={() => handleUpdateCommentStatus(comment.id, comment.status === 'Published' ? 'Unpublished' : 'Published')} editLabel={comment.status === 'Published' ? 'Unpublish' : 'Publish'} onDelete={() => alert(`Deleting comment ${comment.id}`)} /></td>
                         </tr>
                       ))}
                     />
-                    {/*<DataTable
-                        headers={['Author', 'Email', 'Comment', 'In Response To', 'Posted On', 'Status', 'Actions']}
-                        rows={comments.map(comment => ({
-                            id: comment.id,
-                            cells: [
-                            comment.username,
-                            comment.email,
-                            <p className="truncate w-32" title={comment.comment}>{comment.comment}</p>,
-                            <p className="truncate w-32" title={comment.post_title}>{comment.post_title}</p>,
-                            
-                            // Prevent line breaks for datetime
-                            <span
-                                className="whitespace-nowrap block"
-                                title={new Date(comment.created_at).toLocaleString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit',
-                                hour12: true,
-                                })}
-                            >
-                                {comment.created_at
-                                ? new Date(comment.created_at).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'numeric',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    second: '2-digit',
-                                    hour12: true,
-                                    })
-                                : ''}
-                            </span>,
-                            <StatusPill status={comment.status || 'Published'} />,
-                            <ItemActions onEdit={() => handleUpdateCommentStatus(comment.id, comment.status === 'Published' ? 'Unpublished' : 'Published')} editLabel={comment.status === 'Published' ? 'Unpublish' : 'Publish'} onDelete={() => alert(`Deleting comment ${comment.id}`)} />
-                            ]
-                        }))}
-                    />*/}
                 </ManagementSection>
 
 
                 {/* Subscribers Management */}
                 <ManagementSection title={`Manage Subscribers (${subscribers.length})`}>
-                    {/*<DataTable
-                        headers={['Email Address', 'Subscribed On', 'Actions']}
-                        rows={subscribers.map(sub => ({
-                            id: sub.id,
-                            cells: [
-                            sub.email,
-                            new Date(sub.created_at).toLocaleDateString('en-US', {
+                  <DataTable
+                    headers={['Email Address', 'Subscribed On', 'Actions']}
+                    rows={subscribers.map((sub, index) => (
+                      <tr 
+                        key={sub.id}
+                        // --- This is where the Zebra Striping is added ---
+                        className={`hover:bg-zinc-700/50 ${index % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/50'}`}
+                      >
+                        <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{sub.email}</td>
+                        <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{new Date(sub.created_at).toLocaleDateString('en-US', {
                                 year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit',
-                                hour12: true,
-                              }),
-                            <ItemActions onEdit={() => alert('Edit functionality can be added here.')} onDelete={() => handleDeleteSubscriber(sub.id)} />
-                            ]
-                        }))}
-                    />*/}
-                      <DataTable
-                        headers={['Email Address', 'Subscribed On', 'Actions']}
-                        rows={subscribers.map(sub => (
-                          <tr key={sub.id}> {/* <-- ADD KEY HERE */}
-                            <td>{sub.email}</td>
-                            <td>{new Date(sub.created_at).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
+                                month: 'numeric',
                                 day: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 second: '2-digit',
                                 hour12: true,
                               })}</td>
-                            <td><ItemActions onEdit={() => alert('...')} onDelete={() => handleDeleteSubscriber(sub.id)} /></td>
-                          </tr>
-                        ))}
-                      />
+                        <td className="px-4 py-3">
+                          <ItemActions
+                            onEdit={() => alert('Edit functionality can be added here.')}
+                            onDelete={() => handleDeleteSubscriber(sub.id)}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  />
                 </ManagementSection>
             </div>
 
@@ -505,32 +437,51 @@ const ManagementSection = ({ title, children, button = null }: ManagementSection
 );
 
 type DataTableProps = { headers: string[]; rows: ReactNode[]; };
-const DataTable = ({ headers, rows }: DataTableProps) => (
-  <div className="overflow-x-auto bg-zinc-800/40">
-    <table className="w-full text-left">
-      <thead>
-        <tr className="border-b text-sm border-gray-200 dark:border-gray-700">
-          {headers.map((h: string) => (
-            <th key={h} className="p-3 text-sm font-semibold text-gray-500 dark:text-gray-400">
-              {h}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows} {/* <-- The magic is here: just render the rows directly */}
-      </tbody>
-    </table>
-  </div>
-);
+const DataTable = ({ headers, rows }: DataTableProps) => {
+  return (
+    <div className="overflow-x-auto rounded-lg border border-zinc-700 bg-zinc-900">
+      <table className="w-full text-sm">
+        <thead className="bg-zinc-800">
+          <tr>
+            {headers.map((h) => (
+              <th key={h} className="px-4 py-3 font-medium text-zinc-400 text-left whitespace-nowrap"               >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody className="divide-y divide-zinc-700">
+          {/* --- The "Empty State" Check --- */}
+          {rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan={headers.length}
+                className="text-center text-zinc-500 py-10"
+              >
+                No items to display.
+              </td>
+            </tr>
+          ) : (
+            // --- We just render the rows passed in as props ---
+            rows
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 type StatusPillProps = { status: Status; };
 const StatusPill = ({ status }: StatusPillProps) => {
-    const baseClasses = "text-xs font-semibold px-2.5 py-0.5 rounded-full";
+    const baseClasses = "text-xs font-semibold px-2.5 py-0.5 rounded-full inline-block";
     const statusClasses: Record<Status, string> = {
         Published: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
         Draft: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
         Unpublished: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+        // Adding statuses for subscribers for consistency
+        confirmed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+        pending: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
     };
     return <span className={`${baseClasses} ${statusClasses[status] || ''}`}>{status}</span>;
 };
