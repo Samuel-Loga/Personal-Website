@@ -9,6 +9,7 @@ import { CodeHighlightNode, CodeNode } from '@lexical/code';
 import { TableCellNode, TableNode, TableRowNode } from '@lexical/table';
 import { AutoLinkNode, LinkNode } from '@lexical/link';
 import { ImageNode } from '@/components/editor/ImageNode';
+import { ImagePlaceholderNode } from '@/components/editor/ImagePlaceholderNode';
 
 export const editorConfig: InitialConfigType = {
   namespace: 'MyEditor',
@@ -53,5 +54,6 @@ export const editorConfig: InitialConfigType = {
     AutoLinkNode,
     LinkNode,
     ImageNode,
+    ImagePlaceholderNode,
   ],
 };

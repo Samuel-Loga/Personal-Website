@@ -49,6 +49,10 @@ type Subscriber = {
 
 type Status = 'Published' | 'Draft' | 'Unpublished';
 
+type FetchedComment = Comment & {
+  posts: { title: string };
+};
+
 // --- Main Dashboard Component ---
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -103,11 +107,10 @@ export default function AdminDashboardPage() {
 
       if (commentsData) {
           // Supabase returns post object in commentsData, let's flatten it
-          const formattedComments = commentsData.map((c: any) => ({
-              ...c,
-              post_title: c.posts.title,
-              // You need to add a 'status' column to your 'comments' table for moderation
-              status: c.status || 'Published' 
+          const formattedComments = (commentsData as FetchedComment[]).map((c) => ({
+            ...c,
+            post_title: c.posts.title,
+            status: c.status || 'Published' 
           }));
           setComments(formattedComments);
       }
@@ -275,90 +278,111 @@ export default function AdminDashboardPage() {
                         </button>
                     }
                 >
-                    <DataTable
-                        headers={['Title', 'Status', 'Category', 'Actions']}
-                        rows={posts.map(post => [
-                            post.title,
-                            <StatusPill status={post.status} />,
-                            post.category,
-                            <ItemActions 
-                                onEdit={() => handleEditPost(post.id)} 
-                                onDelete={() => handleDeletePost(post.id)} 
-                            />
-                        ])}
-                    />
+                  <DataTable
+                    headers={['Title', 'Status', 'Category', 'Actions']}
+                    rows={posts.map(post => (
+                      <tr key={post.id}> {/* <-- ADD KEY HERE */}
+                        <td>{post.title}</td>
+                        <td><StatusPill status={post.status} /></td>
+                        <td>{post.category}</td>
+                        <td><ItemActions onEdit={() => handleEditPost(post.id)} onDelete={() => handleDeletePost(post.id)} /></td>
+                      </tr>
+                    ))}
+                  />
                 </ManagementSection>
 
                 {/* Comments Management */}
                 <ManagementSection title="Moderate Comments">
-                <DataTable
-                    headers={[
-                    'Author',
-                    'Email',
-                    'Comment',
-                    'In Response To',
-                    'Posted On',
-                    'Status',
-                    'Actions'
-                    ]}
-                    rows={comments.map(comment => [
-                    comment.username,
-                    comment.email,
-                    <p className="truncate w-32" title={comment.comment}>
-                        {comment.comment}
-                    </p>,
-                    <p className="truncate w-32" title={comment.post_title}>
-                        {comment.post_title}
-                    </p>,
-                    
-                    // Prevent line breaks for datetime
-                    <span
-                        className="whitespace-nowrap block"
-                        title={new Date(comment.created_at).toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true,
-                        })}
-                    >
-                        {comment.created_at
-                        ? new Date(comment.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'numeric',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                            hour12: true,
-                            })
-                        : ''}
-                    </span>,
-
-                    <StatusPill status={comment.status || 'Published'} />,
-
-                    <ItemActions
-                        onEdit={() =>
-                        handleUpdateCommentStatus(
-                            comment.id,
-                            comment.status === 'Published' ? 'Unpublished' : 'Published'
-                        )
-                        }
-                        editLabel={comment.status === 'Published' ? 'Unpublish' : 'Publish'}
-                        onDelete={() => alert(`Deleting comment ${comment.id}`)}
+                    <DataTable
+                      headers={['Author', 'Email', 'Comment', 'In Response To', 'Posted On', 'Status', 'Actions']}
+                      rows={comments.map(comment => (
+                        <tr key={comment.id}>
+                          <td>{comment.username}</td>
+                          <td>{comment.email}</td>
+                          <td><p className="truncate w-32" title={comment.comment}>{comment.comment}</p></td>
+                          <td><p className="truncate w-32" title={comment.post_title}>{comment.post_title}</p></td>
+                          <td>
+                            {/* Prevent line breaks for datetime */} 
+                            <span
+                                className="whitespace-nowrap block"
+                                title={new Date(comment.created_at).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true,
+                                })}
+                            >
+                                {comment.created_at
+                                ? new Date(comment.created_at).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'numeric',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                    hour12: true,
+                                    })
+                                : ''}
+                            </span>
+                          </td>
+                          <td><StatusPill status={comment.status || 'Published'} /></td>
+                          <td><ItemActions onEdit={() => handleUpdateCommentStatus(comment.id, comment.status === 'Published' ? 'Unpublished' : 'Published')} editLabel={comment.status === 'Published' ? 'Unpublish' : 'Publish'} onDelete={() => alert(`Deleting comment ${comment.id}`)} /></td>
+                        </tr>
+                      ))}
                     />
-                    ])}
-                />
+                    {/*<DataTable
+                        headers={['Author', 'Email', 'Comment', 'In Response To', 'Posted On', 'Status', 'Actions']}
+                        rows={comments.map(comment => ({
+                            id: comment.id,
+                            cells: [
+                            comment.username,
+                            comment.email,
+                            <p className="truncate w-32" title={comment.comment}>{comment.comment}</p>,
+                            <p className="truncate w-32" title={comment.post_title}>{comment.post_title}</p>,
+                            
+                            // Prevent line breaks for datetime
+                            <span
+                                className="whitespace-nowrap block"
+                                title={new Date(comment.created_at).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true,
+                                })}
+                            >
+                                {comment.created_at
+                                ? new Date(comment.created_at).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'numeric',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                    hour12: true,
+                                    })
+                                : ''}
+                            </span>,
+                            <StatusPill status={comment.status || 'Published'} />,
+                            <ItemActions onEdit={() => handleUpdateCommentStatus(comment.id, comment.status === 'Published' ? 'Unpublished' : 'Published')} editLabel={comment.status === 'Published' ? 'Unpublish' : 'Publish'} onDelete={() => alert(`Deleting comment ${comment.id}`)} />
+                            ]
+                        }))}
+                    />*/}
                 </ManagementSection>
 
 
                 {/* Subscribers Management */}
                 <ManagementSection title={`Manage Subscribers (${subscribers.length})`}>
-                    <DataTable
+                    {/*<DataTable
                         headers={['Email Address', 'Subscribed On', 'Actions']}
-                        rows={subscribers.map(sub => [
+                        rows={subscribers.map(sub => ({
+                            id: sub.id,
+                            cells: [
                             sub.email,
                             new Date(sub.created_at).toLocaleDateString('en-US', {
                                 year: 'numeric',
@@ -369,12 +393,28 @@ export default function AdminDashboardPage() {
                                 second: '2-digit',
                                 hour12: true,
                               }),
-                            <ItemActions
-                                onEdit={() => alert('Edit functionality can be added here.')}
-                                onDelete={() => handleDeleteSubscriber(sub.id)}
-                            />
-                        ])}
-                    />
+                            <ItemActions onEdit={() => alert('Edit functionality can be added here.')} onDelete={() => handleDeleteSubscriber(sub.id)} />
+                            ]
+                        }))}
+                    />*/}
+                      <DataTable
+                        headers={['Email Address', 'Subscribed On', 'Actions']}
+                        rows={subscribers.map(sub => (
+                          <tr key={sub.id}> {/* <-- ADD KEY HERE */}
+                            <td>{sub.email}</td>
+                            <td>{new Date(sub.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true,
+                              })}</td>
+                            <td><ItemActions onEdit={() => alert('...')} onDelete={() => handleDeleteSubscriber(sub.id)} /></td>
+                          </tr>
+                        ))}
+                      />
                 </ManagementSection>
             </div>
 
@@ -464,24 +504,24 @@ const ManagementSection = ({ title, children, button = null }: ManagementSection
     </div>
 );
 
-type DataTableProps = { headers: string[]; rows: ReactNode[][]; };
+type DataTableProps = { headers: string[]; rows: ReactNode[]; };
 const DataTable = ({ headers, rows }: DataTableProps) => (
-    <div className="overflow-x-auto bg-zinc-800/40">
-        <table className="w-full text-left">
-            <thead>
-                <tr className="border-b text-sm border-gray-200 dark:border-gray-700">
-                    {headers.map((h: string) => <th key={h} className="p-3 text-sm font-semibold text-gray-500 dark:text-gray-400">{h}</th>)}
-                </tr>
-            </thead>
-            <tbody>
-                {rows.map((row: ReactNode[], i: number) => (
-                    <tr key={i} className="border-b border-gray-200 text-sm dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        {row.map((cell: ReactNode, j: number) => <td key={j} className="p-3 align-top">{cell}</td>)}
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    </div>
+  <div className="overflow-x-auto bg-zinc-800/40">
+    <table className="w-full text-left">
+      <thead>
+        <tr className="border-b text-sm border-gray-200 dark:border-gray-700">
+          {headers.map((h: string) => (
+            <th key={h} className="p-3 text-sm font-semibold text-gray-500 dark:text-gray-400">
+              {h}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows} {/* <-- The magic is here: just render the rows directly */}
+      </tbody>
+    </table>
+  </div>
 );
 
 type StatusPillProps = { status: Status; };

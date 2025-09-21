@@ -29,9 +29,16 @@ export default function LoginPage() {
         // On success, simply redirect. The new AdminLayout will handle the session check.
         router.push('/admin/dashboard');
       }
-    } catch (catchError: any) {
+    } catch (catchError: unknown) {
         console.error('A critical error occurred during login:', catchError);
-        setError(catchError.message || 'An unexpected error occurred.');
+        let errorMessage = 'An unexpected error occurred.';
+        
+        // Check if the caught object is an instance of Error
+        if (catchError instanceof Error) {
+            errorMessage = catchError.message;
+        }
+        
+        setError(errorMessage);
         setLoading(false);
     }
   };

@@ -5,6 +5,11 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { JSX } from 'react';
+import {
+  $createImagePlaceholderNode,
+  $isImagePlaceholderNode,
+} from '@/components/editor/ImagePlaceholderNode'; // for spinner
+import { NodeKey, $getNodeByKey } from 'lexical'; 
 
 // Lexical Core & Plugins
 import {
@@ -135,14 +140,59 @@ function ToolbarPlugin() {
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (!file) return;
-      const fileName = `${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from('blog-images').upload(fileName, file);
-      if (error) { alert(`Error uploading image: ${error.message}`); return; }
-      const { data: { publicUrl } } = supabase.storage.from('blog-images').getPublicUrl(fileName);
-      // Check the URL in the console
-      //console.log('Image Public URL:', publicUrl); 
-      if (publicUrl) { editor.dispatchCommand(INSERT_IMAGE_COMMAND, publicUrl); }
-      if (fileInputRef.current) { fileInputRef.current.value = ''; }
+
+      // This key will let us find and replace the placeholder later
+      let nodeKey: NodeKey | null = null;
+
+
+      // 1. Insert a placeholder node immediately
+      editor.update(() => {
+        const placeholderNode = $createImagePlaceholderNode();
+        const selection = $getSelection();
+        if ($isRangeSelection(selection)) {
+          selection.insertNodes([placeholderNode]);
+          nodeKey = placeholderNode.getKey();
+        }
+      });
+
+      // 2. Upload the file asynchronously
+      const uploadFile = async () => {
+        try {
+          const fileName = `${Date.now()}-${file.name}`;
+          const { error: uploadError } = await supabase.storage.from('blog-images').upload(fileName, file);
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage.from('blog-images').getPublicUrl(fileName);
+          if (!publicUrl) throw new Error('Could not get public URL.');
+
+          // 3. Replace the placeholder with the final image node
+          editor.update(() => {
+            if (nodeKey) {
+              const placeholderNode = $getNodeByKey(nodeKey);
+              if ($isImagePlaceholderNode(placeholderNode)) {
+                const imageNode = $createImageNode(publicUrl, file.name);
+                placeholderNode.replace(imageNode);
+              }
+            }
+          });
+        } catch (error) {
+          console.error('Image upload failed:', error);
+          // Optional: Remove the placeholder on error
+          editor.update(() => {
+            if (nodeKey) {
+              const node = editor.getElementByKey(nodeKey);
+              if (node) node.remove();
+            }
+          });
+        } finally {
+          // Reset the file input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }
+      };
+
+      uploadFile();
     };
   
     return (
@@ -193,11 +243,12 @@ interface EditorContentProps {
 }
 
 export function EditorContent({ onChange, initialHtml }: EditorContentProps) {
-  const [editor] = useLexicalComposerContext();
-  const handleOnChange = (editorState: EditorState) => {
-    editor.update(() => {
-      const htmlString = $generateHtmlFromNodes(editor, null);
-      onChange(htmlString);
+  //const [editor] = useLexicalComposerContext();
+  const handleOnChange = (editorState: EditorState, editor: LexicalEditorType) => {
+      // The editor instance is passed directly to the callback, so we can use it here.
+      editorState.read(() => { // Using editorState to read is a good practice
+        const htmlString = $generateHtmlFromNodes(editor, null);
+        onChange(htmlString);
     });
   };
 

@@ -4,13 +4,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { editorConfig } from '@/lib/lexical/lexicalConfig';
 import { EditorContent } from '@/components/editor/EditorContent';
 
 export default function EditPostPage() {
-  const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
@@ -62,7 +61,6 @@ export default function EditPostPage() {
     } else {
       setMessage('✅ Post updated successfully!');
       setTimeout(() => setMessage(''), 10000);
-      //router.push('/admin/dashboard');
     }
   };
 
