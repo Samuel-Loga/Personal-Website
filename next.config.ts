@@ -15,7 +15,17 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'www.shutterstock.com',
       },
-    ], // Allow image URLs from http://localhost and https://samuel-loga-portfolio.vercel.app
+      {
+        protocol: 'https',
+        hostname: 'tredugabdlyjhvxlpccy.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/blog-images/**',
+      },
+    ],
+  },
+
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 }
 

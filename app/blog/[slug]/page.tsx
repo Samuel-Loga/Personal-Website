@@ -9,6 +9,7 @@ import CommentSectionWrapper from '@/components/CommentSectionWrapper'
 import Image from 'next/image'
 import { User, Calendar } from 'lucide-react'
 import ShareButtons from '@/components/ShareButtons';
+import SubscribeForm from '@/components/SubscribeForm';
 
 export default async function PostPage(props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params
@@ -108,6 +109,10 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
                 <ShareButtons postTitle={post.title} />
               </div>
 
+              {/* Subscribe Form */}
+              <SubscribeForm />
+
+              {/* Comments Section */}
               <CommentSectionWrapper postId={post.id} />
             </div>
 
