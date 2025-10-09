@@ -84,9 +84,10 @@ function PostCard({ post, view }: { post: Post; view: 'grid' | 'list' }) {
       <div className="p-4 flex flex-col flex-grow">
         <span className="text-xs md:text-sm text-teal-600">{post.category || 'General'}</span>
         <h2 className="mt-1 font-semibold text-base text-zinc-300 flex-grow">{post.title}</h2>
-        <p className="mt-2 text-xs text-zinc-400">
+        <p className="mt-1 text-xs text-zinc-400">
           {format(new Date(post.created_at), 'MMM d, yyyy')}
         </p>
+        <p className="mt-2 text-xs text-zinc-300 line-clamp-3">{post.excerpt}</p>
       </div>
     </Link>
   )
@@ -136,9 +137,16 @@ export default function BlogPage() {
   }, [debouncedSearch]) // Re-run this effect when the debounced search term changes
 
   return (
-    <section className="px-4 sm:px-6 w-full py-12 pb-10 bg-zinc-800 relative min-h-screen">
-      <div className="max-w-6xl mx-auto mt-18 relative">
-        <div className="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap mb-8">
+    <section className="px-4 sm:px-6 w-full py-12 pb-14 bg-zinc-800 relative min-h-screen">
+      <div className="max-w-6xl mx-auto mt-18 md:mt-20 relative">
+
+        <header className="mb-8">
+          <h1 className="text-xl md:text-3xl font-bold text-zinc-100">
+            Welcome to the Digital Journal!
+          </h1>
+        </header>
+
+        <div className="flex items-center justify-between gap-4 flex-wrap">
           <input
             type="text"
             placeholder="Search posts..."
@@ -163,6 +171,10 @@ export default function BlogPage() {
             </button>
           </div>
         </div>
+
+        <p className="text-zinc-400 max-w-3xl mt-8 mb-10">
+          The world of technology is always moving. Here, I document my journey through the ever-evolving landscape of cybersecurity, web development, AI, and beyond. This is a space for deep dives, project stories, and reflections on the principles of our digital world.
+        </p>
 
         {loading ? (
           <p className="text-center text-zinc-500 py-9">Loading posts...</p>
