@@ -58,7 +58,7 @@ function PostCard({ post, view }: { post: Post; view: 'grid' | 'list' }) {
           <p className="mt-1 text-xs text-zinc-400 mb-2">
             {format(new Date(post.created_at), 'MMMM d, yyyy')}
           </p>
-          <p className="text-sm text-zinc-400 line-clamp-2">{post.excerpt || 'No summary available.'}</p>
+          <p className="text-sm text-zinc-400 line-clamp-3">{post.excerpt || 'No summary available.'}</p>
         </div>
       </Link>
     )
@@ -146,13 +146,13 @@ export default function BlogPage() {
           </h1>
         </header>
 
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center justify-between gap-4"> {/* <-- Removed flex-wrap */}
           <input
             type="text"
             placeholder="Search posts..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-[350px] text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
+            className="w-48 sm:w-64 md:w-80 text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"
           />
           <div className="flex items-center gap-2">
             <button
