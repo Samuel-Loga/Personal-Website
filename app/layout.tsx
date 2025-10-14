@@ -22,7 +22,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Samuel Loga's Portfolio",
-  description: "Built with Next.js",
+  description: "Welcome to my Digital Space! I'm Samuel Loga, a passionate Cybersecurity Engineer, web developer and AI enthusiast. Explore my projects, skills, and experiences in the world of technology.",
 };
 
 export default function RootLayout({
