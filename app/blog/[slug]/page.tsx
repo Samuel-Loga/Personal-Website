@@ -123,7 +123,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
                 </div>
               )}
 
-              <article className="prose prose-zinc max-w-none text-zinc-300 prose-headings:text-zinc-200 prose-a:text-teal-400 prose-strong:text-zinc-200">
+              <article className="prose prose-sm sm:prose-base prose-zinc max-w-none text-zinc-300 prose-headings:text-zinc-200 prose-a:text-teal-400 prose-strong:text-zinc-200">
                 <div dangerouslySetInnerHTML={{ __html: post.content }} />
               </article>
 
