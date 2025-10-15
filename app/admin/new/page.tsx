@@ -2,11 +2,17 @@
 
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { editorConfig } from '@/lib/lexical/lexicalConfig';
 import { EditorContent } from '@/components/editor/EditorContent';
+
+// --- Type Definitions ---
+type Category = {
+  id: string; // UUID is a string
+  name: string;
+};
 
 export default function NewPostPage() {
   const [title, setTitle] = useState('');
@@ -17,7 +23,22 @@ export default function NewPostPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [excerpt, setExcerpt] = useState('');
-  const [category, setCategory] = useState('');
+  const [categoryId, setCategoryId] = useState<string>('');
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // Fetch categories from table
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase.from('categories').select('id, name').order('name');
+      if (data) {
+        setCategories(data);
+        if (data.length > 0) {
+          setCategoryId(data[0].id); // Default to the first category's ID
+        }
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,11 +48,20 @@ export default function NewPostPage() {
         setLoading(false);
         return;
     }
+    if (!categoryId) {
+        setMessage('❌ Error: Please select a category.');
+        setLoading(false);
+        return;
+    }
 
     const { error } = await supabase.from('posts').insert([
       {
         title, slug, content,
-        cover_image: coverImage, created_by: 'Samuel Loga', status, excerpt, category,
+        cover_image: coverImage, 
+        created_by: 'Samuel Loga', 
+        status, 
+        excerpt, 
+        category_id: categoryId,
       },
     ]);
 
@@ -46,8 +76,10 @@ export default function NewPostPage() {
       setContent('');
       setCoverImage('');
       setExcerpt('');
-      setCategory('');
       setStatus('draft');
+      if (categories.length > 0) {
+        setCategoryId(categories[0].id);
+      }
     }
   };
 
@@ -61,7 +93,28 @@ export default function NewPostPage() {
             <div><label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label><input id="title" type="text" className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" value={title} onChange={(e) => setTitle(e.target.value)} required/></div>
             <div><label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slug</label><input id="slug" type="text" className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" value={slug} onChange={(e) => setSlug(e.target.value)} required/></div>
             <div><label htmlFor="coverImage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cover Image URL</label><input id="coverImage" type="text" className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" value={coverImage} onChange={(e) => setCoverImage(e.target.value)}/></div>
-            <div><label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label><input id="category" type="text" className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" value={category} onChange={(e) => setCategory(e.target.value)} required/></div>
+            {/*<div><label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label><input id="category" type="text" className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" value={category} onChange={(e) => setCategory(e.target.value)} required/></div>*/}
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+              <select 
+                id="category" 
+                className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800 bg-zinc-800" 
+                value={categoryId} 
+                onChange={(e) => setCategoryId(e.target.value)} 
+                required
+                disabled={categories.length === 0}
+              >
+                {categories.length === 0 ? (
+                  <option value="">Loading categories...</option>
+                ) : (
+                  categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
             <div><label htmlFor="excerpt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Excerpt</label><textarea id="excerpt" className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" rows={5} value={excerpt} onChange={(e) => setExcerpt(e.target.value)} required/></div>
             <div><label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label><select id="status" className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" value={status} onChange={(e) => setStatus(e.target.value)}><option value="draft">Draft</option><option value="published">Published</option></select></div>
           </div>
