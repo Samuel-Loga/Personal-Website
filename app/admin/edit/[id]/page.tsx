@@ -9,6 +9,11 @@ import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { editorConfig } from '@/lib/lexical/lexicalConfig';
 import { EditorContent } from '@/components/editor/EditorContent';
 
+type Category = {
+  id: string; // UUID is a string
+  name: string;
+};
+
 export default function EditPostPage() {
   const params = useParams();
   const id = params.id as string;
@@ -20,7 +25,8 @@ export default function EditPostPage() {
   const [coverImage, setCoverImage] = useState('');
   const [status, setStatus] = useState<'published' | 'draft'>('draft');
   const [excerpt, setExcerpt] = useState('');
-  const [category, setCategory] = useState('');
+  const [categoryId, setCategoryId] = useState<string>('');
+  const [categories, setCategories] = useState<Category[]>([]);
   
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -29,10 +35,21 @@ export default function EditPostPage() {
     if (!id) return;
     const fetchPost = async () => {
       setLoading(true);
-      const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
-      if (error) {
-        setMessage(`❌ Error: ${error.message}`);
-      } else if (data) {
+      //const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
+      const [postRes, categoriesRes] = await Promise.all([
+        supabase.from('posts').select('*').eq('id', id).single(),
+        supabase.from('categories').select('id, name').order('name'),
+      ]);
+
+      // Populate categories dropdown
+      if (categoriesRes.data) {
+        setCategories(categoriesRes.data);
+      }
+
+      if (postRes.error) {
+        setMessage(`❌ Error: ${postRes.error.message}`);
+      } else if (postRes.data) {
+        const data = postRes.data;
         setTitle(data.title);
         setSlug(data.slug);
         setInitialContent(data.content);
@@ -40,7 +57,10 @@ export default function EditPostPage() {
         setCoverImage(data.cover_image || '');
         setStatus(data.status);
         setExcerpt(data.excerpt || '');
-        setCategory(data.category || '');
+        // Pre-select the post's current category in the dropdown
+        if (data.category_id) {
+          setCategoryId(data.category_id);
+        }
       }
       setLoading(false);
     };
@@ -52,7 +72,7 @@ export default function EditPostPage() {
     setLoading(true);
     const { error } = await supabase
       .from('posts')
-      .update({ title, slug, content, cover_image: coverImage, status, excerpt, category, updated_at: new Date().toISOString() })
+      .update({ title, slug, content, cover_image: coverImage, status, excerpt, category_id: categoryId, updated_at: new Date().toISOString() })
       .match({ id });
 
     setLoading(false);
@@ -78,7 +98,27 @@ export default function EditPostPage() {
             <div><label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label><input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" /></div>
             <div><label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slug</label><input id="slug" type="text" value={slug} onChange={(e) => setSlug(e.target.value)} required className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" /></div>
             <div><label htmlFor="coverImage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cover Image URL</label><input id="coverImage" type="text" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" /></div>
-            <div><label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label><input id="category" type="text" value={category} onChange={(e) => setCategory(e.target.value)} required className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" /></div>
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+              <select
+                id="category"
+                className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800 bg-zinc-800"
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                required
+                disabled={categories.length === 0}
+              >
+                {categories.length === 0 ? (
+                  <option value="">Loading categories...</option>
+                ) : (
+                  categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
             <div><label htmlFor="excerpt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Excerpt</label><textarea id="excerpt" value={excerpt} rows={5} onChange={(e) => setExcerpt(e.target.value)} required className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800" /></div>
             <div><label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label><select id="status" value={status} onChange={(e) => setStatus(e.target.value as 'published' | 'draft')} className="w-full text-zinc-300 px-4 py-2 border border-teal-800 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-800"><option value="draft">Draft</option><option value="published">Published</option></select></div>
           </div>

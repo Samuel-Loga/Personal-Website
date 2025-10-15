@@ -17,7 +17,7 @@ type Post = {
   created_at: string;
   updated_at: string;
   excerpt: string;
-  category: string;
+  categories: { name: string } | null; 
   // For the UI, we will need to calculate these
   comments_count?: number;
   likes_count?: number;
@@ -36,8 +36,9 @@ type Comment = {
 };
 
 type Category = {
-  id: number; // Assuming serial from DB
+  id: string; // UUID is a string
   name: string;
+  description: string | null;
   post_count?: number;
 };
 
@@ -65,6 +66,7 @@ export default function AdminDashboardPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryDescription, setNewCategoryDescription] = useState('');
   
   const [newsletterSubject, setNewsletterSubject] = useState('');
   const [newsletterContent, setNewsletterContent] = useState('');
@@ -86,61 +88,23 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      
-      // Fetch Posts
-      const { data: postsData, error: postsError } = await supabase.from('posts').select('*');
-      if (postsError) console.error('Error fetching posts:', postsError);
-      
-      // Fetch Comments
-      const { data: commentsData, error: commentsError } = await supabase.from('comments').select('*, posts(title)');
-      if (commentsError) console.error('Error fetching comments:', commentsError);
-      
-      // Fetch Categories - This is a derived data, we'll calculate it from posts
-      if (postsData) {
-        const categoryCounts = postsData.reduce((acc, post) => {
-            acc[post.category] = (acc[post.category] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>);
-
-        const categoriesData = Object.keys(categoryCounts).map((name, index) => ({
-            id: index + 1,
-            name,
-            post_count: categoryCounts[name],
-        }));
-        setCategories(categoriesData);
-        setPosts(postsData as Post[]);
-      }
-
-      if (commentsData) {
-          // Supabase returns post object in commentsData, let's flatten it
-          const formattedComments = (commentsData as FetchedComment[]).map((c) => ({
-            ...c,
-            post_title: c.posts.title,
-            status: c.status || 'Published' 
-          }));
-          setComments(formattedComments);
-      }
-
-      // Fetch Subscribers
-      const { data: subscribersData, error: subscribersError } = await supabase
-        .from('subscribers')
-        .select('*')
-        .order('created_at', { ascending: false }); // Get newest first
-
-      if (subscribersError) {
-        console.error('Error fetching subscribers:', subscribersError);
-      } else if (subscribersData) {
-        setSubscribers(subscribersData);
-      }
-
+      const [postsRes, commentsRes, categoriesRes, subscribersRes] = await Promise.all([
+        supabase.from('posts').select('*, categories(name)'),
+        supabase.from('comments').select('*, posts(title)'),
+        supabase.from('categories').select('*, posts(count)'),
+        supabase.from('subscribers').select('*').order('created_at', { ascending: false })
+      ]);
+      if (postsRes.data) setPosts(postsRes.data);
+      if (commentsRes.data) setComments((commentsRes.data as any[]).map(c => ({...c, post_title: c.posts?.title || 'N/A'})));
+      if (categoriesRes.data) setCategories(categoriesRes.data.map((cat: any) => ({ ...cat, post_count: cat.posts[0]?.count ?? 0 })));
+      if (subscribersRes.data) setSubscribers(subscribersRes.data as Subscriber[]);
       setLoading(false);
     };
-
     fetchData();
   }, []);
 
   // --- Navigation Handlers ---
-  const handleAddNewPost = () => {
+  const handleAddNewPost = () => { 
     router.push('/admin/new');
   };
 
@@ -170,26 +134,44 @@ export default function AdminDashboardPage() {
   };
   
   const handleCategorySubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      // Category management is complex as it is a derived field. 
-      // A real implementation would involve updating the 'category' field on all relevant posts.
-      // This is a simplified UI-only version.
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    const categoryData = { name: newCategoryName, description: newCategoryDescription };
+    let error, data;
+    if (editingCategory) {
+      ({ data, error } = await supabase.from('categories').update(categoryData).eq('id', editingCategory.id).select('*, posts(count)').single());
+    } else {
+      ({ data, error } = await supabase.from('categories').insert(categoryData).select('*, posts(count)').single());
+    }
+    if (error) {
+      alert(`Error: ${error.message}`);
+    } else if(data) {
+      const processedCategory = { ...data, post_count: data.posts[0]?.count ?? 0 };
       if (editingCategory) {
-          alert(`Updating category "${editingCategory.name}" to "${newCategoryName}" requires a batch update on posts. This is a complex operation.`);
+        setCategories(categories.map(c => c.id === editingCategory.id ? processedCategory : c));
       } else {
-          const newCategory: Category = { id: Date.now(), name: newCategoryName, post_count: 0 };
-          setCategories([...categories, newCategory]);
-          alert(`Category "${newCategoryName}" added to the UI. To persist this, create a post with this category.`);
+        setCategories([...categories, processedCategory]);
       }
       setIsCategoryModalOpen(false);
       setNewCategoryName('');
+      setNewCategoryDescription('');
       setEditingCategory(null);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (window.confirm('Are you sure? This will un-categorize associated posts.')) {
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (!error) setCategories(categories.filter(c => c.id !== id));
+      else alert(`Error: ${error.message}`);
+    }
   };
   
   const openCategoryModal = (category: Category | null = null) => {
-      setEditingCategory(category);
-      setNewCategoryName(category ? category.name : '');
-      setIsCategoryModalOpen(true);
+    setEditingCategory(category);
+    setNewCategoryName(category ? category.name : '');
+    setNewCategoryDescription(category ? category.description || '' : '');
+    setIsCategoryModalOpen(true);
   };
 
   // Removed duplicate sendNewsletter function to resolve redeclaration error.
@@ -248,8 +230,8 @@ export default function AdminDashboardPage() {
       <div className="max-w-6xl mx-auto pt-24">
         <header className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back. Here&apos;s an overview of your blog.</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl text-zinc-200 font-bold tracking-tight sm:pt">Admin Dashboard | Activity Overview</h1>
+            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 mt-1">Welcome back. Here&apos;s an overview of your blog.</p>
           </div>
           <button
             onClick={handleLogout}
@@ -321,7 +303,9 @@ export default function AdminDashboardPage() {
                         className={`hover:bg-teal-900/20 ${index % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/50'}`}
                       >
                         <td className="px-4 py-3 text-zinc-300"><p className="truncate w-32" title={post.title}>{post.title}</p></td>
-                        <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{post.category}</td>
+                        <td className="px-4 py-3 text-zinc-400 whitespace-nowrap">
+                                {post.categories?.name || 'Uncategorized'}
+                        </td>
                         <td className="px-4 py-3 text-zinc-300">{post.comments_count}</td>
                         <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{new Date(post.created_at).toLocaleDateString('en-US', {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, })} </td> 
                         <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">{new Date(post.updated_at).toLocaleDateString('en-US', {year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, })} </td>
