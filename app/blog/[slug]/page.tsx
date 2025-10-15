@@ -11,37 +11,57 @@ import { User, Calendar } from 'lucide-react'
 import ShareButtons from '@/components/ShareButtons';
 import SubscribeForm from '@/components/SubscribeForm';
 
+// Type definition and reusable components
+type Category = {
+  id: string; // UUID is a string
+  name: string;
+  description: string | null;
+  post_count?: number;
+};
+
+type Post = { 
+  id: string; 
+  title: string; 
+  slug: string; 
+  excerpt?: string; 
+  cover_image?: string; 
+  created_at: string; 
+  created_by: string;
+  content: string;
+  categories: { id: string; name: string } | null; 
+};
+
 export default async function PostPage(props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params
 
-  // Fetch the current post
+  // 1. Fetch the current post and JOIN the category name and ID
   const { data: post, error } = await supabaseAdmin
     .from('posts')
-    .select('*')
+    .select('*, categories(id, name)')
     .eq('slug', slug)
     .eq('status', 'published')
-    .single()
+    .single<Post>()
 
   if (error || !post) notFound()
 
-  // Fetch categories (distinct and sorted)
-  const { data: categoriesData } = await supabaseAdmin
-    .from('posts')
-    .select('category')
-    .eq('status', 'published')
+  // 2. Fetch categories directly from the 'categories' table for the sidebar
+  const { data: categories } = await supabaseAdmin
+    .from('categories')
+    .select('id, name')
+    .limit(5);
 
-  const uniqueCategories = Array.from(
-    new Set((categoriesData ?? []).map((c) => c.category))
-  ).slice(0, 5)
-
-  // Fetch 3 most recent posts (excluding current)
+  // Fetch 3 most recent posts (excluding the current one)
   const { data: recentPosts } = await supabaseAdmin
     .from('posts')
     .select('id, title, slug, excerpt, cover_image, created_at')
     .eq('status', 'published')
     .neq('slug', slug)
     .order('created_at', { ascending: false })
-    .limit(3) // Changed to 3 to make space for the ad
+    .limit(3);
+    
+  // Prepare category data for display, handling cases where a post might not have one
+  const categoryName = post.categories?.name || 'Uncategorized';
+  const categoryId = post.categories?.id; // Changed to 3 to make space for the ad
 
   return (
     <>
@@ -79,7 +99,13 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
                         </div>
                     </div>
                     <p className="text-sm text-zinc-400 mt-2 sm:mt-0">
-                        Post / <Link href={`/blog?category=${encodeURIComponent(post.category)}`} className="text-teal-400 hover:underline">{post.category}</Link>
+                      Post /{' '}
+                      <Link 
+                        href={`/blog?category_id=${categoryId}`} 
+                        className="text-teal-400 hover:underline"
+                      >
+                        {categoryName}
+                      </Link>
                     </p>
                 </div>
               </div>
@@ -122,21 +148,19 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
               <div className="bg-zinc-700/50 rounded-xl p-6 shadow-md">
                 <h3 className="text-lg font-semibold mb-4 text-zinc-300">Categories</h3>
                 <ul className="space-y-2">
-                  {uniqueCategories.map((cat) => (
-                    <li key={cat}>
+                  {/* --- 4. UPDATED SIDEBAR CATEGORY LIST --- */}
+                  {(categories ?? []).map((cat) => (
+                    <li key={cat.id}>
                       <Link
-                        href={`/blog?category=${encodeURIComponent(cat)}`}
+                        href={`/blog?category_id=${cat.id}`}
                         className="text-sm text-zinc-300 hover:text-teal-500 transition-colors"
                       >
-                        #{cat}
+                        #{cat.name}
                       </Link>
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href="/blog/categories"
-                  className="mt-4 inline-block text-xs text-teal-500 hover:underline"
-                >
+                <Link href="/blog/categories" className="mt-4 inline-block text-xs text-teal-500 hover:underline">
                   View more →
                 </Link>
               </div>
@@ -145,7 +169,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
               <div className="bg-zinc-700/50 rounded-xl p-6 shadow-md">
                 <h3 className="text-lg font-semibold mb-4 text-zinc-300">Recent Posts</h3>
                 <div className="space-y-4">
-                  {recentPosts?.map((p) => (
+                  {(recentPosts ?? []).map((p) => (
                     <Link
                       key={p.id}
                       href={`/blog/${p.slug}`}
