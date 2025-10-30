@@ -139,7 +139,7 @@ function BlogPageClient() {
         </div>
 
         <p className="text-sm md:text-base text-zinc-300 max-w-3xl mb-8 md:mb-10">
-          The world of technology is always moving. Here, I document my journey through the ever-evolving landscape of cybersecurity, web development, AI, and beyond. This is a space for deep dives, project stories, and reflections on the principles of our digital world.
+          The world of technology is always moving. Here, I share and document my views and experience on the ever-evolving landscape of cybersecurity, web development, AI, and any related stuff. So, this is a space for deep dives, project stories, and reflections on the principles of our digital world.
         </p>
 
         {loading ? (
