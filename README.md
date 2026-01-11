@@ -16,5 +16,5 @@ My portfolio is built to reflect my passion for technology, problem-solving, and
 
 - **Framework:** [Next.js](https://nextjs.org/)
 - **Frontend:** React, Tailwind CSS, TypeScript
-- **Backend:** [Supabase](https://supabase.com/) (for blog posts, comments, reactions, replies)
+- **Backend:** [Supabase](https://supabase.com/) (for blog posts, categories, newsletters, comments, reactions, replies)
 - **Hosting:** [Vercel](https://vercel.com/)
